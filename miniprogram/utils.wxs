@@ -1,0 +1,16 @@
+// utils.wxs - 工具函数模块
+var formatNumber = function(n) {
+  n = n.toString();
+  return n[1] ? n : '0' + n;
+};
+
+var round = function(num, decimals) {
+  decimals = decimals || 0;
+  var factor = Math.pow(10, decimals);
+  return Math.round(num * factor) / factor;
+};
+
+module.exports = {
+  formatNumber: formatNumber,
+  round: round
+};

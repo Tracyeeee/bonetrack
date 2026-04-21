@@ -1,0 +1,466 @@
+<!--pages/calendar/calendar.wxml-->
+<view class="page-container">
+  <!-- 顶部导航栏 - 动态高度 -->
+  <view class="nav-bar" style="height: {{navBarHeight}};">
+    <view class="nav-content">
+      <text class="page-title">康复日历</text>
+    </view>
+  </view>
+
+  <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};">
+    <!-- 统计卡片 -->
+    <view class="stats-card card gradient-bg">
+      <view class="stats-row">
+        <view class="stat-item">
+          <text class="stat-value big-number">{{stats.totalDays}}</text>
+          <text class="stat-label text-caption text-secondary">术后天数</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value big-number">{{stats.checkedInDays}}</text>
+          <text class="stat-label text-caption text-secondary">打卡天数</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value big-number">{{stats.completionRate}}%</text>
+          <text class="stat-label text-caption text-secondary">完成率</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 日历区域 -->
+    <view class="calendar-section card">
+      <!-- 月份切换 -->
+      <view class="month-header">
+        <view class="month-nav" bindtap="prevMonth">
+          <text class="nav-arrow">‹</text>
+        </view>
+        <text class="month-title text-h2">{{currentYear}}年{{currentMonth}}月</text>
+        <view class="month-nav" bindtap="nextMonth">
+          <text class="nav-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 星期标题 -->
+      <view class="week-header">
+        <text class="week-day" wx:for="{{weekDays}}" wx:key="index">{{item}}</text>
+      </view>
+
+      <!-- 日期网格 -->
+      <view class="days-grid">
+        <view
+          class="day-cell {{item.empty ? 'empty' : ''}} {{item.isToday ? 'today' : ''}} {{item.hasRecord || item.event ? 'has-record' : ''}} {{item.isFuture ? 'future' : ''}}"
+          wx:for="{{days}}"
+          wx:key="index"
+          data-date="{{item.date}}"
+          bindtap="selectDate"
+        >
+          <text class="day-text" wx:if="{{!item.empty}}">{{item.day}}</text>
+          <!-- 记录标记容器 -->
+          <view class="record-marks" wx:if="{{!item.empty && (item.hasRecord || item.tasks || item.event || item.allTasksCompleted)}}">
+            <!-- 完成训练标签（优先级最高，显示在最前面） -->
+            <view wx:if="{{item.allTasksCompleted}}" class="mini-completed-tag">完成</view>
+            <!-- 事项标签 -->
+            <view wx:if="{{item.event}}" class="mini-event-tag">{{item.event}}</view>
+            <!-- 角度记录标记 -->
+            <view wx:if="{{item.angle}}" class="mini-angle-tag">{{item.angle}}°</view>
+            <!-- 任务完成标记 -->
+            <view wx:if="{{item.tasks && item.tasks.length > 0 && !item.allTasksCompleted}}" class="mini-task-dot"></view>
+          </view>
+          <!-- 有照片标记（优先级最高） -->
+          <view wx:if="{{item.hasPhoto}}" class="record-dot photo-dot"></view>
+        </view>
+      </view>
+
+      <!-- 图例 -->
+      <view class="calendar-legend mt-30">
+        <view class="legend-item">
+          <view class="legend-dot"></view>
+          <text class="text-caption text-muted">已打卡</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-dot completed-dot"></view>
+          <text class="text-caption text-muted">完成训练</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-dot angle-dot"></view>
+          <text class="text-caption text-muted">有角度记录</text>
+        </view>
+        <view class="legend-item">
+          <view class="legend-dot photo-dot"></view>
+          <text class="text-caption text-muted">有照片</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 康复指南 - 动作库 -->
+    <view class="guide-section mt-30">
+      <view class="section-header flex-between">
+        <text class="section-title text-h3">康复指南</text>
+        <text class="text-caption text-secondary">动作库</text>
+      </view>
+
+      <!-- 分类标签 -->
+      <scroll-view class="category-scroll" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <view class="category-tabs">
+          <view
+            class="category-tab {{currentCategory === item.id ? 'active' : ''}}"
+            wx:for="{{categories}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="switchCategory"
+          >
+            <text class="category-icon">{{item.icon}}</text>
+            <text class="category-name">{{item.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- 动作列表 -->
+      <view class="exercise-list mt-20">
+        <block wx:for="{{exerciseLibrary}}" wx:key="id">
+          <view
+            class="exercise-card card"
+            wx:if="{{currentCategory === 'all' || item.category === currentCategory}}"
+            data-id="{{item.id}}"
+            bindtap="viewExercise"
+          >
+            <view class="exercise-header">
+              <view class="exercise-icon-box">
+                <text class="exercise-icon-text">{{item.icon}}</text>
+              </view>
+              <view class="exercise-basic">
+                <text class="exercise-name text-h3">{{item.name}}</text>
+                <view class="exercise-meta">
+                  <text class="tag">{{item.difficulty}}</text>
+                  <text class="text-caption text-secondary ml-20">{{item.sets}}组 × {{item.reps}}</text>
+                </view>
+              </view>
+            </view>
+            <text class="exercise-desc text-body text-secondary mt-20">{{item.description}}</text>
+            <view class="exercise-footer mt-20">
+              <view class="tip-icon">
+                <text class="text-caption text-muted">💡</text>
+              </view>
+              <text class="exercise-tip text-caption text-muted">{{item.tips[0]}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 动作详情弹窗 -->
+  <view class="exercise-detail-modal" wx:if="{{showExerciseDetail}}" bindtap="closeExerciseDetail">
+    <view class="exercise-detail-content" catchtap="preventBubble">
+      <!-- 弹窗头部 -->
+      <view class="detail-header">
+        <view class="detail-icon-box">
+          <text class="detail-icon-text">{{currentExercise.icon}}</text>
+        </view>
+        <view class="detail-title-section">
+          <text class="detail-title text-h2">{{currentExercise.name}}</text>
+          <view class="detail-meta mt-10">
+            <text class="tag">{{currentExercise.difficulty}}</text>
+            <text class="text-caption text-secondary ml-20">{{currentExercise.sets}}组 × {{currentExercise.reps}}</text>
+          </view>
+        </view>
+        <view class="modal-close" bindtap="closeExerciseDetail">
+          <text>×</text>
+        </view>
+      </view>
+
+      <!-- 动作描述 -->
+      <view class="detail-section">
+        <text class="detail-section-title text-h3">动作说明</text>
+        <text class="detail-desc text-body text-secondary mt-20">{{currentExercise.description}}</text>
+      </view>
+
+      <!-- 动作要点 -->
+      <view class="detail-section">
+        <text class="detail-section-title text-h3">动作要点</text>
+        <view class="tips-list mt-20">
+          <view class="tip-item" wx:for="{{currentExercise.tips}}" wx:key="index">
+            <text class="tip-number">{{index + 1}}</text>
+            <text class="tip-text text-body">{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="detail-actions">
+        <button class="btn-secondary action-btn" bindtap="closeExerciseDetail">
+          返回
+        </button>
+        <button class="btn-primary action-btn" bindtap="goToTasks">
+          去训练
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 记录详情弹窗 -->
+  <view class="record-modal {{showRecordDetail ? 'show' : ''}}" bindtap="closeRecordDetail">
+    <view class="record-modal-content" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title text-h2">{{selectedDate}}</text>
+        <view class="modal-close" bindtap="closeRecordDetail">
+          <text>×</text>
+        </view>
+      </view>
+
+      <!-- 日期类型标识 -->
+      <view class="date-type-badge" wx:if="{{selectedDateInfo}}">
+        <text class="date-type-text" wx:if="{{selectedDateInfo.isFuture}}">📅 未来日期</text>
+        <text class="date-type-text" wx:elif="{{selectedDateInfo.isToday}}">📍 今日</text>
+        <text class="date-type-text" wx:else>📋 历史记录</text>
+      </view>
+
+      <!-- 有记录时的显示模式 -->
+      <view class="modal-body" wx:if="{{!isAddingEvent && selectedRecord && !selectedDateInfo.isFuture}}">
+        <!-- 操作按钮 -->
+        <view class="record-actions">
+          <view class="action-btn edit-btn" bindtap="enterEditMode">
+            <text>补充打卡</text>
+          </view>
+          <view class="action-btn event-btn" bindtap="enterAddEventMode">
+            <text>添加事项</text>
+          </view>
+        </view>
+
+        <!-- 训练任务列表 -->
+        <view class="tasks-list-section">
+          <text class="section-label text-caption text-secondary">训练任务</text>
+          <view class="tasks-list">
+            <view class="task-item {{task.completed ? 'completed' : ''}}" wx:for="{{selectedTasks}}" wx:key="id">
+              <text class="task-icon">{{item.icon}}</text>
+              <text class="task-name">{{item.name}}</text>
+              <text class="task-status {{task.completed ? 'done' : 'pending'}}">{{task.completed ? '✓' : '○'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 照片预览 -->
+        <view class="photo-preview-section" wx:if="{{selectedRecord.photos && selectedRecord.photos.length > 0}}">
+          <text class="section-label text-caption text-secondary">打卡照片</text>
+          <scroll-view class="photo-scroll" scroll-x="{{true}}">
+            <view class="photo-list">
+              <image
+                class="preview-photo"
+                wx:for="{{selectedRecord.photos}}"
+                wx:key="index"
+                src="{{item}}"
+                mode="aspectFill"
+              ></image>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 角度数据 -->
+        <view class="data-item" wx:if="{{selectedRecord.angle}}">
+          <view class="data-icon">
+            <text>📐</text>
+          </view>
+          <view class="data-info">
+            <text class="data-label text-caption text-secondary">弯腿角度</text>
+            <text class="data-value big-number">{{selectedRecord.angle}}°</text>
+          </view>
+        </view>
+
+        <!-- 负重数据 -->
+        <view class="data-item" wx:if="{{selectedRecord.weight}}">
+          <view class="data-icon">
+            <text>⚖️</text>
+          </view>
+          <view class="data-info">
+            <text class="data-label text-caption text-secondary">负重量</text>
+            <text class="data-value big-number">{{selectedRecord.weight}} {{selectedRecord.weightUnit || 'kg'}}</text>
+          </view>
+        </view>
+
+        <!-- 已有事项 -->
+        <view class="event-section" wx:if="{{selectedRecord.event}}">
+          <view class="event-display">
+            <text class="event-icon">📌</text>
+            <text class="event-text">{{selectedRecord.event}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 补充打卡编辑模式 -->
+      <view class="modal-body" wx:if="{{isEditingRecord}}">
+        <text class="section-label text-caption text-secondary mb-20">补充打卡</text>
+
+        <!-- 角度编辑 -->
+        <view class="form-item">
+          <text class="form-label text-caption text-secondary">弯腿角度 (°)</text>
+          <input
+            class="form-input"
+            type="digit"
+            value="{{editingAngle}}"
+            placeholder="请输入弯腿角度"
+            bindinput="onAngleInput"
+            maxlength="5"
+          />
+        </view>
+
+        <!-- 负重编辑 -->
+        <view class="form-item">
+          <text class="form-label text-caption text-secondary">负重 (kg)</text>
+          <input
+            class="form-input"
+            type="digit"
+            value="{{editingWeight}}"
+            placeholder="请输入负重重量"
+            bindinput="onWeightInput"
+            maxlength="5"
+          />
+        </view>
+
+        <!-- 事项输入（可编辑） -->
+        <view class="form-item">
+          <text class="form-label text-caption text-secondary">事项（选填）</text>
+          <input
+            class="form-input"
+            value="{{editingEvent}}"
+            placeholder="如：复诊、换药、康复评估"
+            bindinput="onEventInput"
+            maxlength="20"
+          />
+        </view>
+
+        <!-- 编辑操作按钮 -->
+        <view class="edit-actions">
+          <button class="btn-cancel" bindtap="cancelEdit">取消</button>
+          <button class="btn-primary-sm" bindtap="saveRecordEdit">保存</button>
+        </view>
+      </view>
+
+      <!-- 添加事项模式 -->
+      <view class="modal-body" wx:if="{{isAddingEvent && !isEditingRecord}}">
+        <text class="section-label text-caption text-secondary mb-20">{{selectedDateInfo && selectedDateInfo.isFuture ? '新增事项' : '添加事项'}}</text>
+
+        <!-- 事项输入 -->
+        <view class="form-item">
+          <text class="form-label text-caption text-secondary">事项内容</text>
+          <input
+            class="form-input"
+            value="{{newEventText}}"
+            placeholder="如：复诊、换药、康复评估"
+            bindinput="onEventInput"
+            maxlength="20"
+          />
+        </view>
+
+        <!-- 事项快捷标签 -->
+        <view class="event-quick-tags">
+          <text class="event-quick-label text-caption text-muted">快捷标签：</text>
+          <view class="quick-tags-row">
+            <text
+              class="quick-tag {{selectedQuickTag === item ? 'selected' : ''}}"
+              wx:for="{{quickTags}}"
+              wx:key="index"
+              data-tag="{{item}}"
+              bindtap="selectQuickTag"
+            >{{item}}</text>
+          </view>
+        </view>
+
+        <!-- 非未来日期显示补充打卡选项 -->
+        <view class="supplement-checkin" wx:if="{{!selectedDateInfo.isFuture}}">
+          <text class="section-label text-caption text-secondary mb-20">同时补充打卡（选填）</text>
+
+          <!-- 角度编辑 -->
+          <view class="form-item">
+            <text class="form-label text-caption text-secondary">弯腿角度 (°)</text>
+            <input
+              class="form-input"
+              type="digit"
+              value="{{editingAngle}}"
+              placeholder="请输入弯腿角度"
+              bindinput="onAngleInput"
+              maxlength="5"
+            />
+          </view>
+
+          <!-- 负重编辑 -->
+          <view class="form-item">
+            <text class="form-label text-caption text-secondary">负重 (kg)</text>
+            <input
+              class="form-input"
+              type="digit"
+              value="{{editingWeight}}"
+              placeholder="请输入负重重量"
+              bindinput="onWeightInput"
+              maxlength="5"
+            />
+          </view>
+        </view>
+
+        <!-- 操作按钮 -->
+        <view class="edit-actions">
+          <button class="btn-cancel" bindtap="cancelAddEvent">取消</button>
+          <button class="btn-primary-sm" bindtap="saveEvent">保存</button>
+        </view>
+      </view>
+
+      <!-- 无记录时的显示模式（过去日期） -->
+      <view class="modal-body" wx:if="{{!selectedRecord && !isAddingEvent && !isEditingRecord && selectedDateInfo && !selectedDateInfo.isFuture && !selectedDateInfo.isToday}}">
+        <view class="empty-state">
+          <text class="empty-icon">📝</text>
+          <text class="text-secondary">当日暂无打卡记录</text>
+        </view>
+        <view class="quick-add-actions">
+          <button class="btn-primary mt-20" bindtap="enterAddEventMode">
+            <text>添加事项</text>
+          </button>
+          <button class="btn-secondary-outline mt-20" bindtap="enterEditMode">
+            <text>补充打卡</text>
+          </button>
+        </view>
+      </view>
+
+      <!-- 今日无记录 -->
+      <view class="modal-body" wx:if="{{!selectedRecord && !isAddingEvent && !isEditingRecord && selectedDateInfo && selectedDateInfo.isToday}}">
+        <view class="empty-state">
+          <text class="empty-icon">📝</text>
+          <text class="text-secondary">今日尚未打卡</text>
+        </view>
+
+        <!-- 训练任务列表 -->
+        <view class="tasks-list-section">
+          <text class="section-label text-caption text-secondary">训练任务</text>
+          <view class="tasks-list">
+            <view class="task-item {{task.completed ? 'completed' : ''}}" wx:for="{{selectedTasks}}" wx:key="id">
+              <text class="task-icon">{{item.icon}}</text>
+              <text class="task-name">{{item.name}}</text>
+              <text class="task-status {{task.completed ? 'done' : 'pending'}}">{{task.completed ? '✓' : '○'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="quick-add-actions">
+          <button class="btn-primary mt-20" bindtap="goToCheckIn">
+            <text>去打卡</text>
+          </button>
+          <button class="btn-secondary-outline mt-20" bindtap="enterAddEventMode">
+            <text>添加事项</text>
+          </button>
+        </view>
+      </view>
+
+      <!-- 未来日期 -->
+      <view class="modal-body" wx:if="{{!selectedRecord && !isAddingEvent && !isEditingRecord && selectedDateInfo && selectedDateInfo.isFuture}}">
+        <view class="empty-state">
+          <text class="empty-icon">📅</text>
+          <text class="text-secondary">可添加待办事项</text>
+        </view>
+        <view class="quick-add-actions">
+          <button class="btn-primary mt-20" bindtap="enterAddEventMode">
+            <text>添加事项</text>
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

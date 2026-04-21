@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/profile/profile",
+    "pages/index/index",
+    "pages/calendar/calendar",
+    "pages/square/square",
+    "pages/checkin/checkin",
+    "pages/user/user"
+  ],
+  "window": {
+    "backgroundColor": "#0A0A0A",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#0A0A0A",
+    "navigationBarTitleText": "Bonetrack 骨迹",
+    "navigationBarTextStyle": "white",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "color": "#888888",
+    "selectedColor": "#FF4D00",
+    "backgroundColor": "#0A0A0A",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/calendar/calendar",
+        "text": "日历"
+      },
+      {
+        "pagePath": "pages/square/square",
+        "text": "广场"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "text": "个人中心"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

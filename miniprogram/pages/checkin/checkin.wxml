@@ -1,0 +1,114 @@
+<!--pages/checkin/checkin.wxml-->
+<view class="page-container">
+  <!-- 顶部导航栏 - 动态高度 -->
+  <view class="nav-bar" style="height: {{navBarHeight}};">
+    <view class="nav-content">
+      <text class="page-title">今日打卡</text>
+    </view>
+  </view>
+
+  <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};">
+    <!-- 照片打卡模块 -->
+    <view class="card module-card">
+      <view class="module-header" bindtap="toggleModule" data-module="photo">
+        <view class="flex-align-center">
+          <view class="module-icon" style="background-color: rgba(255, 77, 0, 0.2);">
+            <text>📸</text>
+          </view>
+          <view class="module-info">
+            <text class="module-title text-h3">拍照打卡</text>
+            <text class="module-subtitle text-caption text-secondary ml-20">记录康复过程</text>
+          </view>
+        </view>
+        <view class="module-arrow {{activeModule === 'photo' ? 'arrow-up' : ''}}">›</view>
+      </view>
+      <view class="module-content" wx:if="{{activeModule === 'photo'}}">
+        <view class="photo-grid">
+          <block wx:for="{{photos}}" wx:key="index">
+            <view class="photo-item">
+              <image src="{{item}}" mode="aspectFill" bindtap="previewPhoto" data-url="{{item}}"></image>
+              <view class="photo-delete" bindtap="deletePhoto" data-index="{{index}}">×</view>
+            </view>
+          </block>
+          <view class="photo-add" bindtap="addPhoto" wx:if="{{photos.length < maxPhotos}}">
+            <text class="add-icon">+</text>
+            <text class="add-text">添加照片</text>
+          </view>
+        </view>
+        <view class="module-tip text-caption text-secondary">
+          建议上传患侧腿伸直、弯曲不同角度的照片
+        </view>
+      </view>
+    </view>
+
+    <!-- 角度记录模块 -->
+    <view class="card module-card">
+      <view class="module-header" bindtap="toggleModule" data-module="angle">
+        <view class="flex-align-center">
+          <view class="module-icon" style="background-color: rgba(0, 150, 255, 0.2);">
+            <text>📐</text>
+          </view>
+          <view class="module-info">
+            <text class="module-title text-h3">角度记录</text>
+            <text class="module-subtitle text-caption text-secondary ml-20">记录关节活动度</text>
+          </view>
+        </view>
+        <view class="module-arrow {{activeModule === 'angle' ? 'arrow-up' : ''}}">›</view>
+      </view>
+      <view class="module-content" wx:if="{{activeModule === 'angle'}}">
+        <view class="angle-display">
+          <text class="angle-value">{{angle || '--'}}</text>
+          <text class="angle-unit">°</text>
+        </view>
+        <view class="angle-grid">
+          <block wx:for="{{angleOptions}}" wx:key="index">
+            <view class="angle-option {{angle == item ? 'selected' : ''}}" bindtap="selectAngle" data-angle="{{item}}">
+              {{item}}°
+            </view>
+          </block>
+        </view>
+        <view class="custom-input">
+          <input type="number" placeholder="自定义角度" bindinput="inputAngle" class="input-field" />
+          <text class="input-unit">°</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 负重记录模块 -->
+    <view class="card module-card">
+      <view class="module-header" bindtap="toggleModule" data-module="weight">
+        <view class="flex-align-center">
+          <view class="module-icon" style="background-color: rgba(0, 200, 100, 0.2);">
+            <text>⚖️</text>
+          </view>
+          <view class="module-info">
+            <text class="module-title text-h3">负重记录</text>
+            <text class="module-subtitle text-caption text-secondary ml-20">记录承重情况</text>
+          </view>
+        </view>
+        <view class="module-arrow {{activeModule === 'weight' ? 'arrow-up' : ''}}">›</view>
+      </view>
+      <view class="module-content" wx:if="{{activeModule === 'weight'}}">
+        <view class="weight-display">
+          <text class="weight-value">{{weight || '--'}}</text>
+          <text class="weight-unit">{{weightUnit}}</text>
+        </view>
+        <view class="weight-options">
+          <view class="weight-option {{weightUnit === 'kg' ? 'active' : ''}}" bindtap="setWeightUnit" data-unit="kg">公斤(kg)</view>
+          <view class="weight-option {{weightUnit === '斤' ? 'active' : ''}}" bindtap="setWeightUnit" data-unit="斤">斤</view>
+        </view>
+        <view class="custom-input">
+          <input type="digit" placeholder="输入体重" bindinput="inputWeight" class="input-field" />
+          <text class="input-unit">{{weightUnit}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 保存按钮 -->
+    <view class="save-section">
+      <button class="save-btn gradient-btn" bindtap="saveRecord" loading="{{isSaving}}">
+        保存打卡记录
+      </button>
+    </view>
+  </scroll-view>
+</view>

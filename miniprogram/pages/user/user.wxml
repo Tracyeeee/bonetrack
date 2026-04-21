@@ -1,0 +1,116 @@
+<!--pages/user/user.wxml-->
+<wxs module="utils" src="../../utils.wxs"></wxs>
+<view class="page-container">
+  <!-- 顶部导航栏 - 动态高度 -->
+  <view class="nav-bar" style="height: {{navBarHeight}};">
+    <!-- 导航内容行 -->
+    <view class="nav-content">
+      <view class="nav-left">
+        <view class="back-btn" bindtap="goBack">
+          <text>‹</text>
+        </view>
+        <text class="page-title">个人中心</text>
+      </view>
+      <view class="nav-right" bindtap="editProfile">
+        <text class="edit-btn">编辑</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};">
+    <!-- 用户信息卡片 -->
+    <view class="user-card card gradient-bg">
+      <view class="user-header">
+        <view class="user-avatar-wrapper">
+          <view class="avatar-container {{userInfo.isAuthorized ? 'glow' : ''}}">
+            <image wx:if="{{userInfo.avatar}}" class="avatar-image" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+            <text wx:else class="avatar-placeholder">👤</text>
+          </view>
+        </view>
+        <view class="user-info">
+          <text class="user-nickname text-h2">{{userInfo.nickname}}</text>
+          <view class="user-tags mt-10">
+            <text class="user-tag text-caption">{{userInfo.injuryPart}}</text>
+            <text class="user-tag text-caption">{{userInfo.injuryType}}</text>
+            <text class="user-tag text-caption text-orange">术后{{userInfo.daysSinceSurgery}}天</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 统计数据 -->
+    <view class="stats-section mt-30">
+      <view class="stats-grid">
+        <view class="stat-card card">
+          <text class="stat-value big-number">{{stats.checkInDays}}</text>
+          <text class="stat-label text-caption text-secondary mt-10">打卡天数</text>
+        </view>
+        <view class="stat-card card">
+          <text class="stat-value big-number">{{stats.totalPhotos}}</text>
+          <text class="stat-label text-caption text-secondary mt-10">记录照片</text>
+        </view>
+        <view class="stat-card card">
+          <text class="stat-value big-number">{{stats.consecutiveDays}}</text>
+          <text class="stat-label text-caption text-secondary mt-10">连续打卡</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 康复进度 -->
+    <view class="progress-section mt-30">
+      <view class="section-header flex-between">
+        <text class="section-title text-h3">康复进度</text>
+      </view>
+      
+      <view class="progress-card card">
+        <!-- 角度进度 -->
+        <view class="angle-progress">
+          <view class="progress-header">
+            <text class="text-caption text-secondary">当前弯腿角度</text>
+            <text class="text-caption text-secondary">目标：{{progress.targetAngle}}°</text>
+          </view>
+          <view class="angle-display mt-20">
+            <text class="angle-value big-number text-orange">{{progress.latestAngle}}</text>
+            <text class="angle-unit text-h3 text-secondary">°</text>
+          </view>
+          <view class="progress-bar-wrapper mt-20">
+            <view class="progress-bar">
+              <view class="progress-fill" style="width: {{progress.latestAngle / progress.targetAngle * 100}}%;"></view>
+            </view>
+            <view class="progress-labels flex-between mt-10">
+              <text class="text-caption text-muted">0°</text>
+              <text class="text-caption text-orange">{{utils.round(progress.latestAngle / progress.targetAngle * 100, 0)}}%</text>
+              <text class="text-caption text-muted">{{progress.targetAngle}}°</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 菜单列表 -->
+    <view class="menu-section mt-30">
+      <view class="menu-list card">
+        <view 
+          class="menu-item"
+          wx:for="{{menuItems}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="onMenuTap"
+        >
+          <view class="menu-left">
+            <text class="menu-icon">{{item.icon}}</text>
+            <text class="menu-name text-body">{{item.name}}</text>
+          </view>
+          <view class="menu-right" wx:if="{{item.arrow}}">
+            <text class="menu-arrow text-muted">›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 版本信息 -->
+    <view class="version-info mt-40 mb-40">
+      <text class="text-caption text-muted">Bonetrack 骨迹 v1.0.0</text>
+    </view>
+  </scroll-view>
+</view>

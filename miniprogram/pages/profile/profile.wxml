@@ -1,0 +1,540 @@
+<!--pages/profile/profile.wxml-->
+<wxs module="utils">
+module.exports = {
+  isSelected: function(list, id) {
+    return list.indexOf(id) !== -1;
+  }
+}
+</wxs>
+<view class="page-container">
+  <!-- 自定义导航栏 -->
+  <view class="custom-nav">
+    <view class="nav-left">
+      <text class="back-btn" bindtap="handleBack">‹ 返回</text>
+    </view>
+    <view class="nav-title">
+      <text class="text-h3">伤情简历</text>
+    </view>
+    <view class="nav-right"></view>
+  </view>
+
+  <!-- 确认弹窗 -->
+  <view class="confirm-modal" wx:if="{{showConfirmModal}}" catchtouchmove="preventTouchMove">
+    <view class="modal-mask" bindtap="cancelSave"></view>
+    <view class="modal-content">
+      <text class="modal-title text-h3">是否保存修改</text>
+      <view class="modal-actions">
+        <view class="modal-btn cancel" bindtap="cancelSave">取消</view>
+        <view class="modal-btn save" bindtap="confirmSave">保存</view>
+      </view>
+    </view>
+  </view>
+  <!-- 顶部进度 -->
+  <view class="progress-header">
+    <view class="step-indicators">
+      <view 
+        class="step-dot {{currentStep >= 1 ? 'active' : ''}} {{currentStep > 1 ? 'completed' : ''}}"
+        wx:for="{{totalSteps}}"
+        wx:key="index"
+      >
+        <text class="step-number" wx:if="{{currentStep <= index}}">{{index + 1}}</text>
+        <text class="step-check" wx:else>✓</text>
+      </view>
+      <view class="step-lines">
+        <view class="step-line {{currentStep >= 2 ? 'active' : ''}}"></view>
+        <view class="step-line {{currentStep >= 3 ? 'active' : ''}}"></view>
+        <view class="step-line {{currentStep >= 4 ? 'active' : ''}}"></view>
+      </view>
+    </view>
+    <view class="step-label">
+      <text class="text-caption text-secondary">第 {{currentStep}} 步，共 {{totalSteps}} 步</text>
+    </view>
+  </view>
+
+  <!-- 步骤1：选择损伤部位 -->
+  <view class="step-content" wx:if="{{currentStep === 1}}">
+    <view class="step-title">
+      <text class="text-h2">选择损伤部位</text>
+      <text class="text-caption text-secondary mt-10">请选择您的受伤位置</text>
+    </view>
+
+    <!-- 部位大类 -->
+    <view class="selection-section">
+      <text class="section-label text-caption text-secondary mb-20">损伤部位</text>
+      <view class="selection-grid">
+        <view 
+          class="selection-item {{selectedPart && selectedPart.id === item.id ? 'selected' : ''}}"
+          wx:for="{{injuryParts}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="selectPart"
+        >
+          <text class="item-icon">{{item.id === 'lower_limb' ? '🦵' : (item.id === 'upper_limb' ? '💪' : '🧍')}}</text>
+          <text class="item-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 部位详细 -->
+    <view class="selection-section" wx:if="{{selectedPart}}">
+      <text class="section-label text-caption text-secondary mb-20">具体位置</text>
+      <view class="selection-tags">
+        <view 
+          class="selection-tag {{selectedPartDetail && selectedPartDetail.id === item.id ? 'selected' : ''}}"
+          wx:for="{{selectedPart.children}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="selectPartDetail"
+        >
+          {{item.name}}
+        </view>
+        <!-- 自定义选项 -->
+        <view 
+          class="selection-tag custom-tag {{isCustomDetail ? 'selected' : ''}}"
+          bindtap="showCustomDetailInput"
+        >
+          {{isCustomDetail ? customDetailValue : '+ 自定义'}}
+        </view>
+      </view>
+      <!-- 自定义输入框 -->
+      <view class="custom-input-wrapper" wx:if="{{showCustomDetailInput}}">
+        <input 
+          class="input-field custom-input"
+          type="text"
+          placeholder="请输入具体部位"
+          value="{{customDetailValue}}"
+          bindinput="inputCustomDetail"
+          bindconfirm="confirmCustomDetail"
+          focus="{{showCustomDetailInput}}"
+          maxlength="20"
+        />
+        <view class="custom-confirm-btn" bindtap="confirmCustomDetail">确定</view>
+      </view>
+    </view>
+
+    <!-- 损伤类型 -->
+    <view class="selection-section" wx:if="{{selectedPartDetail && selectedPartDetail.children && selectedPartDetail.children.length > 0}}">
+      <text class="section-label text-caption text-secondary mb-20">损伤类型</text>
+      <view class="selection-tags">
+        <view 
+          class="selection-tag {{selectedInjuryType && selectedInjuryType.id === item.id ? 'selected' : ''}}"
+          wx:for="{{selectedPartDetail.children}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="selectInjuryType"
+        >
+          {{item.name}}
+        </view>
+        <!-- 自定义选项 -->
+        <view 
+          class="selection-tag custom-tag {{isCustomInjury ? 'selected' : ''}}"
+          bindtap="showCustomInjuryInput"
+        >
+          {{isCustomInjury ? customInjuryValue : '+ 自定义'}}
+        </view>
+      </view>
+      <!-- 自定义输入框 -->
+      <view class="custom-input-wrapper" wx:if="{{showCustomInjuryInput}}">
+        <input 
+          class="input-field custom-input"
+          type="text"
+          placeholder="请输入损伤类型"
+          value="{{customInjuryValue}}"
+          bindinput="inputCustomInjury"
+          bindconfirm="confirmCustomInjury"
+          focus="{{showCustomInjuryInput}}"
+          maxlength="20"
+        />
+        <view class="custom-confirm-btn" bindtap="confirmCustomInjury">确定</view>
+      </view>
+    </view>
+    
+    <!-- 损伤类型（无预设选项时的自定义输入） -->
+    <view class="selection-section" wx:if="{{selectedPartDetail && (!selectedPartDetail.children || selectedPartDetail.children.length === 0)}}">
+      <text class="section-label text-caption text-secondary mb-20">损伤类型</text>
+      <view class="custom-input-wrapper show">
+        <input 
+          class="input-field custom-input"
+          type="text"
+          placeholder="请输入损伤类型"
+          value="{{customInjuryValue}}"
+          bindinput="inputCustomInjury"
+          maxlength="20"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 步骤2：治疗方式与日期 -->
+  <view class="step-content" wx:if="{{currentStep === 2}}">
+    <view class="step-title">
+      <text class="text-h2">治疗方式</text>
+      <text class="text-caption text-secondary mt-10">选择您的治疗方式</text>
+    </view>
+
+    <!-- 治疗方式选择 -->
+    <view class="selection-section">
+      <view class="treatment-options">
+        <view 
+          class="treatment-item {{treatmentType === 'surgery' ? 'selected' : ''}}"
+          bindtap="selectTreatmentType"
+          data-type="surgery"
+        >
+          <text class="treatment-icon">🏥</text>
+          <text class="treatment-name">手术治疗</text>
+          <text class="treatment-desc text-caption text-secondary">已进行手术</text>
+        </view>
+        <view 
+          class="treatment-item {{treatmentType === 'conservative' ? 'selected' : ''}}"
+          bindtap="selectTreatmentType"
+          data-type="conservative"
+        >
+          <text class="treatment-icon">💊</text>
+          <text class="treatment-name">保守治疗</text>
+          <text class="treatment-desc text-caption text-secondary">无需手术</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 日期选择（手术治疗） -->
+    <view class="date-picker-section mt-40" wx:if="{{treatmentType === 'surgery'}}">
+      <view class="step-title">
+        <text class="text-h2">手术日期</text>
+        <text class="text-caption text-secondary mt-10">选择您接受手术的日期</text>
+      </view>
+      <view class="date-display">
+        <text class="date-label text-caption text-secondary">手术日期</text>
+        <picker
+          mode="date"
+          value="{{surgeryDate}}"
+          start="2000-01-01"
+          end="{{maxDate}}"
+          bindchange="bindSurgeryDateChange"
+        >
+          <view class="date-value {{surgeryDate ? '' : 'placeholder'}}">
+            <text wx:if="{{surgeryDate}}">{{surgeryDate}}</text>
+            <text wx:else>请选择日期</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 天数提示 -->
+      <view class="days-info card mt-30" wx:if="{{surgeryDate}}">
+        <text class="text-caption text-secondary">截至今日</text>
+        <view class="days-display">
+          <text class="big-number text-orange">{{userInfo.daysSinceSurgery || '?'}}</text>
+          <text class="text-h3 text-secondary ml-20">天</text>
+        </view>
+        <text class="text-caption text-muted mt-10">术后康复进行中</text>
+      </view>
+
+      <!-- 快捷选择 -->
+      <view class="quick-dates mt-30">
+        <text class="section-label text-caption text-secondary mb-20">快捷选择</text>
+        <view class="quick-date-tags">
+          <view class="quick-date-tag" data-days="1" data-type="surgery" bindtap="selectRecentDate">今天</view>
+          <view class="quick-date-tag" data-days="7" data-type="surgery" bindtap="selectRecentDate">1周前</view>
+          <view class="quick-date-tag" data-days="14" data-type="surgery" bindtap="selectRecentDate">2周前</view>
+          <view class="quick-date-tag" data-days="30" data-type="surgery" bindtap="selectRecentDate">1个月前</view>
+          <view class="quick-date-tag" data-days="90" data-type="surgery" bindtap="selectRecentDate">3个月前</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 日期选择（保守治疗） -->
+    <view class="date-picker-section mt-40" wx:if="{{treatmentType === 'conservative'}}">
+      <view class="step-title">
+        <text class="text-h2">受伤日期</text>
+        <text class="text-caption text-secondary mt-10">选择您受伤的日期</text>
+      </view>
+      <view class="date-display">
+        <text class="date-label text-caption text-secondary">受伤日期</text>
+        <picker
+          mode="date"
+          value="{{injuryDate}}"
+          start="2000-01-01"
+          end="{{maxDate}}"
+          bindchange="bindInjuryDateChange"
+        >
+          <view class="date-value {{injuryDate ? '' : 'placeholder'}}">
+            <text wx:if="{{injuryDate}}">{{injuryDate}}</text>
+            <text wx:else>请选择日期</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 天数提示 -->
+      <view class="days-info card mt-30" wx:if="{{injuryDate}}">
+        <text class="text-caption text-secondary">截至今日</text>
+        <view class="days-display">
+          <text class="big-number text-orange">{{userInfo.daysSinceSurgery || '?'}}</text>
+          <text class="text-h3 text-secondary ml-20">天</text>
+        </view>
+        <text class="text-caption text-muted mt-10">康复进行中</text>
+      </view>
+
+      <!-- 快捷选择 -->
+      <view class="quick-dates mt-30">
+        <text class="section-label text-caption text-secondary mb-20">快捷选择</text>
+        <view class="quick-date-tags">
+          <view class="quick-date-tag" data-days="1" data-type="conservative" bindtap="selectRecentDate">今天</view>
+          <view class="quick-date-tag" data-days="7" data-type="conservative" bindtap="selectRecentDate">1周前</view>
+          <view class="quick-date-tag" data-days="14" data-type="conservative" bindtap="selectRecentDate">2周前</view>
+          <view class="quick-date-tag" data-days="30" data-type="conservative" bindtap="selectRecentDate">1个月前</view>
+          <view class="quick-date-tag" data-days="90" data-type="conservative" bindtap="selectRecentDate">3个月前</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 步骤3：基本信息 -->
+  <view class="step-content" wx:if="{{currentStep === 3}}">
+    <view class="step-title">
+      <text class="text-h2">基本信息</text>
+      <text class="text-caption text-secondary mt-10">完善您的个人信息</text>
+    </view>
+
+    <!-- 昵称 -->
+    <view class="input-section">
+      <text class="section-label text-caption text-secondary mb-20">昵称</text>
+      <input 
+        class="input-field"
+        type="text"
+        placeholder="给自己起个名字"
+        value="{{userInfo.nickname}}"
+        bindinput="inputNickname"
+        maxlength="20"
+      />
+    </view>
+
+    <!-- 损伤原因 -->
+    <view class="selection-section mt-40">
+      <text class="section-label text-caption text-secondary mb-20">损伤原因</text>
+      <view class="cause-grid">
+        <view
+          class="cause-item {{userInfo.injuryCause === item.name ? 'selected' : ''}}"
+          wx:for="{{injuryCauses}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="selectCause"
+        >
+          <text class="cause-icon">{{item.icon}}</text>
+          <text class="cause-name text-caption">{{item.name}}</text>
+        </view>
+        <!-- 自定义选项 -->
+        <view
+          class="cause-item custom-cause {{isCustomCause ? 'selected' : ''}}"
+          bindtap="showCustomCauseInput"
+        >
+          <text class="cause-icon">✏️</text>
+          <text class="cause-name text-caption">{{isCustomCause ? customCauseValue : '自定义'}}</text>
+        </view>
+      </view>
+      <!-- 自定义输入框 -->
+      <view class="custom-input-wrapper mt-20" wx:if="{{showCustomCauseInput}}">
+        <input
+          class="input-field custom-input"
+          type="text"
+          placeholder="请输入损伤原因"
+          value="{{customCauseValue}}"
+          bindinput="inputCustomCause"
+          bindconfirm="confirmCustomCause"
+          focus="{{showCustomCauseInput}}"
+          maxlength="20"
+        />
+        <view class="custom-confirm-btn" bindtap="confirmCustomCause">确定</view>
+      </view>
+    </view>
+
+    <!-- 运动损伤细分 -->
+    <view class="selection-section mt-40" wx:if="{{selectedCauseId === 'sports'}}">
+      <text class="section-label text-caption text-secondary mb-20">运动类型</text>
+      <view class="sports-sub-grid">
+        <view
+          class="cause-item {{userInfo.sportsType === item.name ? 'selected' : ''}}"
+          wx:for="{{sportsTypes}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="selectSportsType"
+        >
+          <text class="cause-icon">{{item.icon}}</text>
+          <text class="cause-name text-caption">{{item.name}}</text>
+        </view>
+        <!-- 自定义运动类型 -->
+        <view
+          class="cause-item custom-cause {{isCustomSportsType ? 'selected' : ''}}"
+          bindtap="showCustomSportsTypeInput"
+        >
+          <text class="cause-icon">✏️</text>
+          <text class="cause-name text-caption">{{isCustomSportsType ? customSportsTypeValue : '其他'}}</text>
+        </view>
+      </view>
+      <!-- 自定义运动类型输入框 -->
+      <view class="custom-input-wrapper mt-20" wx:if="{{showCustomSportsTypeInput}}">
+        <input
+          class="input-field custom-input"
+          type="text"
+          placeholder="请输入运动类型"
+          value="{{customSportsTypeValue}}"
+          bindinput="inputCustomSportsType"
+          bindconfirm="confirmCustomSportsType"
+          focus="{{showCustomSportsTypeInput}}"
+          maxlength="20"
+        />
+        <view class="custom-confirm-btn" bindtap="confirmCustomSportsType">确定</view>
+      </view>
+    </view>
+
+    <!-- 运动背景 -->
+    <view class="selection-section mt-40">
+      <text class="section-label text-caption text-secondary mb-20">运动背景</text>
+      <view class="background-grid">
+        <view
+          class="background-item {{userInfo.sportsBackground === item.name ? 'selected' : ''}}"
+          wx:for="{{sportsBackgrounds}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="selectBackground"
+        >
+          <text class="background-icon">{{item.icon}}</text>
+          <text class="background-name text-caption">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+      <!-- 运动爱好者运动类型（可多选） -->
+      <view class="selection-section mt-40" wx:if="{{userInfo.sportsBackground === '运动爱好者'}}">
+        <text class="section-label text-caption text-secondary mb-20">喜欢的运动（可多选）</text>
+        <view class="sports-multi-grid">
+          <view
+            class="sports-multi-item {{utils.isSelected(selectedSportsList, item.id) ? 'selected' : ''}}"
+            wx:for="{{sportsList}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="toggleSportsItem"
+          >
+            <text class="sports-multi-icon">{{item.icon}}</text>
+            <text class="sports-multi-name text-caption">{{item.name}}</text>
+          </view>
+          <!-- 自定义运动 -->
+          <view
+            class="sports-multi-item custom-sports {{isCustomSports ? 'selected' : ''}}"
+            bindtap="showCustomSportsInput"
+          >
+            <text class="sports-multi-icon">✏️</text>
+            <text class="sports-multi-name text-caption">{{isCustomSports ? customSportsValue : '其他'}}</text>
+          </view>
+        </view>
+        <!-- 已选的运动标签 -->
+        <view class="selected-sports-tags mt-20" wx:if="{{selectedSportsList.length > 0 || isCustomSports}}">
+          <text class="text-caption text-secondary">已选择：</text>
+          <view class="selected-tag" wx:for="{{sportsList}}" wx:key="id" wx:if="{{utils.isSelected(selectedSportsList, item.id)}}">
+            {{item.name}}
+            <text class="tag-close" data-id="{{item.id}}" catchtap="removeSportsItem">×</text>
+          </view>
+          <view class="selected-tag" wx:if="{{isCustomSports}}">
+            {{customSportsValue}}
+            <text class="tag-close" catchtap="removeCustomSports">×</text>
+          </view>
+        </view>
+      <!-- 自定义运动输入框 -->
+      <view class="custom-input-wrapper mt-20" wx:if="{{showCustomSportsInput}}">
+        <input
+          class="input-field custom-input"
+          type="text"
+          placeholder="请输入运动名称"
+          value="{{customSportsValue}}"
+          bindinput="inputCustomSports"
+          bindconfirm="confirmCustomSports"
+          focus="{{showCustomSportsInput}}"
+          maxlength="20"
+        />
+        <view class="custom-confirm-btn" bindtap="confirmCustomSports">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 步骤4：授权与完成 -->
+  <view class="step-content" wx:if="{{currentStep === 4}}">
+    <view class="step-title">
+      <text class="text-h2">授权并同步</text>
+      <text class="text-caption text-secondary mt-10">微信一键授权，畅享全部功能</text>
+    </view>
+
+    <!-- 简历摘要 -->
+    <view class="profile-summary card mt-30">
+      <view class="summary-header">
+        <text class="text-h3">伤情简历</text>
+      </view>
+      <view class="summary-items">
+        <view class="summary-item">
+          <text class="summary-label text-caption text-secondary">损伤部位</text>
+          <text class="summary-value text-body">{{userInfo.injuryPart}} - {{userInfo.injuryPartDetail}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label text-caption text-secondary">损伤类型</text>
+          <text class="summary-value text-body">{{userInfo.injuryType}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label text-caption text-secondary">治疗方式</text>
+          <text class="summary-value text-body">{{treatmentType === 'surgery' ? '手术治疗' : '保守治疗'}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label text-caption text-secondary">{{treatmentType === 'surgery' ? '手术日期' : '受伤日期'}}</text>
+          <text class="summary-value text-body">{{treatmentType === 'surgery' ? userInfo.surgeryDate : userInfo.injuryDate}}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label text-caption text-secondary">康复天数</text>
+          <text class="summary-value text-body text-orange">{{userInfo.daysSinceSurgery || 0}} 天</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label text-caption text-secondary">昵称</text>
+          <text class="summary-value text-body">{{userInfo.nickname}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 授权说明 -->
+    <view class="auth-notice mt-30">
+      <view class="notice-item">
+        <text class="notice-icon">✓</text>
+        <text class="notice-text text-body text-secondary">打卡数据与微信账号绑定</text>
+      </view>
+      <view class="notice-item">
+        <text class="notice-icon">✓</text>
+        <text class="notice-text text-body text-secondary">开启广场发布权限</text>
+      </view>
+      <view class="notice-item">
+        <text class="notice-icon">✓</text>
+        <text class="notice-text text-body text-secondary">数据云端同步，更换设备不丢失</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="bottom-actions">
+    <view class="action-back" wx:if="{{currentStep > 1}}" bindtap="prevStep">
+      <text class="text-secondary">上一步</text>
+    </view>
+    
+    <button 
+      class="btn-primary action-next {{currentStep === 1 ? 'full-width' : ''}}"
+      wx:if="{{currentStep < 4}}"
+      bindtap="nextStep"
+    >
+      下一步
+    </button>
+
+    <!-- 步骤4的按钮 -->
+    <view class="auth-buttons" wx:if="{{currentStep === 4}}">
+      <button class="btn-primary" bindtap="authorizeWechat" loading="{{isSubmitting}}">
+        微信授权并完成
+      </button>
+      <view class="skip-btn" bindtap="skipAuth">
+        <text class="text-caption text-muted">稍后授权</text>
+      </view>
+    </view>
+  </view>
+</view>

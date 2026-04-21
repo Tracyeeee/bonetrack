@@ -1,0 +1,236 @@
+<!--pages/square/square.wxml-->
+<view class="page-container">
+  <!-- 顶部导航栏 - 动态高度 -->
+  <view class="nav-bar" style="height: {{navBarHeight}};">
+    <view class="nav-content">
+      <text class="page-title">伤友广场</text>
+    </view>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view class="filter-btn {{(selectedInjuryTypes.length > 0 || selectedSportBackgrounds.length > 0) ? 'active' : ''}}" bindtap="toggleFilterPanel">
+      <text class="filter-icon">🔍</text>
+      <text class="filter-text">筛选</text>
+      <text class="filter-count" wx:if="{{selectedInjuryTypes.length + selectedSportBackgrounds.length > 0}}">
+        {{selectedInjuryTypes.length + selectedSportBackgrounds.length}}
+      </text>
+    </view>
+    <view class="filter-result" wx:if="{{displayPosts.length !== posts.length}}">
+      <text class="text-caption text-muted">找到 {{displayPosts.length}} 条相关动态</text>
+    </view>
+    <view class="filter-result" wx:else>
+      <text class="text-caption text-muted">全部动态</text>
+    </view>
+  </view>
+
+  <!-- 筛选面板 -->
+  <view class="filter-panel {{showFilterPanel ? 'show' : ''}}" wx:if="{{showFilterPanel}}">
+    <view class="filter-mask" bindtap="closeFilterPanel"></view>
+    <view class="filter-content">
+      <!-- 损伤类型筛选 -->
+      <view class="filter-section">
+        <view class="filter-section-header">
+          <text class="filter-section-title">损伤类型</text>
+          <text class="filter-section-clear" wx:if="{{selectedInjuryTypes.length > 0}}" bindtap="toggleInjuryType" data-id="clear">清除</text>
+        </view>
+        <view class="filter-tags">
+          <view
+            class="filter-tag {{selectedInjuryTypes.indexOf(item.id) > -1 ? 'selected' : ''}}"
+            wx:for="{{injuryTypeOptions}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="toggleInjuryType"
+          >
+            {{item.name}}
+          </view>
+        </view>
+      </view>
+
+      <!-- 运动背景筛选 -->
+      <view class="filter-section">
+        <view class="filter-section-header">
+          <text class="filter-section-title">运动背景</text>
+          <text class="filter-section-clear" wx:if="{{selectedSportBackgrounds.length > 0}}" bindtap="toggleSportBackground" data-id="clear">清除</text>
+        </view>
+        <view class="filter-tags">
+          <view
+            class="filter-tag {{selectedSportBackgrounds.indexOf(item.id) > -1 ? 'selected' : ''}}"
+            wx:for="{{sportBackgroundOptions}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="toggleSportBackground"
+          >
+            <text>{{item.icon}}</text>
+            <text class="tag-name">{{item.name}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 筛选操作按钮 -->
+      <view class="filter-actions">
+        <view class="filter-reset-btn" bindtap="resetFilter">
+          <text>重置</text>
+        </view>
+        <view class="filter-confirm-btn" bindtap="applyFilter">
+          <text>确定</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view class="content {{showFilterPanel ? 'content-hidden' : ''}}" scroll-y="{{true}}" style="margin-top: calc({{navBarHeight}} + 90rpx);">
+    <!-- 动态列表 -->
+    <view class="posts-list">
+      <view class="post-card card" wx:for="{{displayPosts}}" wx:key="id">
+        <!-- 用户信息 -->
+        <view class="post-header">
+          <view class="user-info" data-userid="{{item.userId}}" bindtap="viewUserProfile">
+            <view class="user-avatar">
+              <image wx:if="{{item.userAvatar}}" src="{{item.userAvatar}}" mode="aspectFill"></image>
+              <text wx:else class="avatar-placeholder-icon">👤</text>
+            </view>
+            <view class="user-details">
+              <text class="user-name text-body">{{item.userName}}</text>
+              <view class="user-tags">
+                <text class="user-tag text-caption">{{item.injuryPart}}</text>
+                <text class="user-tag text-caption">{{item.injuryType}}</text>
+                <text class="user-tag text-caption text-blue">{{item.injuryReason}}</text>
+                <text class="user-tag text-caption text-purple">{{item.sportBackground}}</text>
+                <text class="user-tag text-caption text-orange">术后{{item.daysSinceSurgery}}天</text>
+              </view>
+            </view>
+          </view>
+          <text class="post-time text-caption text-muted">{{item.createTime}}</text>
+        </view>
+
+        <!-- 动态内容 -->
+        <view class="post-content">
+          <text class="content-text text-body">{{item.content}}</text>
+        </view>
+
+        <!-- 动态图片 -->
+        <view class="post-images" wx:if="{{item.images && item.images.length > 0}}">
+          <image 
+            class="post-image" 
+            wx:for="{{item.images}}"
+            wx:for-item="img"
+            wx:key="index"
+            src="{{img}}"
+            mode="aspectFill"
+          ></image>
+        </view>
+
+        <!-- 标签 -->
+        <view class="post-tags mt-20">
+          <text class="post-tag text-caption text-orange" wx:for="{{item.tags}}" wx:key="index">{{item}}</text>
+        </view>
+
+        <!-- 互动栏 -->
+        <view class="post-actions mt-30">
+          <view class="action-item {{item.isLiked ? 'liked' : ''}}" data-id="{{item.id}}" bindtap="toggleLike">
+            <text class="action-icon">{{item.isLiked ? '❤️' : '🤍'}}</text>
+            <text class="action-text text-caption">{{item.likes}}</text>
+          </view>
+          <view class="action-item" data-id="{{item.id}}" bindtap="commentPost">
+            <text class="action-icon">💬</text>
+            <text class="action-text text-caption">{{item.comments}}</text>
+          </view>
+        </view>
+
+        <!-- 评论列表 -->
+        <view class="comment-section" wx:if="{{item.showComments && item.commentList.length > 0}}">
+          <view class="comment-item" wx:for="{{item.commentList}}" wx:key="id">
+            <view class="comment-user">
+              <text class="comment-user-name">{{item.userName}}</text>
+              <text class="comment-time text-muted">{{item.createTime}}</text>
+            </view>
+            <text class="comment-content">{{item.content}}</text>
+          </view>
+        </view>
+
+        <!-- 查看全部评论按钮 -->
+        <view class="view-more-comments" wx:if="{{item.showComments && item.comments > 0}}" data-id="{{item.id}}" bindtap="openCommentInput">
+          <text class="text-orange text-caption">写评论...</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 发布按钮 -->
+  <view class="fab-publish" bindtap="openPublishModal">
+    <text class="fab-icon">✏️</text>
+  </view>
+
+  <!-- 发布弹窗 -->
+  <view class="publish-modal {{showPublishModal ? 'show' : ''}}" bindtap="closePublishModal">
+    <view class="publish-content" catchtap="preventBubble">
+      <!-- 头部 -->
+      <view class="publish-header">
+        <text class="publish-cancel text-secondary" bindtap="closePublishModal">取消</text>
+        <text class="publish-title text-h3">发布动态</text>
+        <text class="publish-submit text-orange" bindtap="publishPost">发布</text>
+      </view>
+
+      <!-- 用户信息 -->
+      <view class="publish-user-info">
+        <view class="user-avatar-small">
+          <image wx:if="{{userInfo.avatar}}" src="{{userInfo.avatar}}" mode="aspectFill"></image>
+          <text wx:else class="avatar-placeholder-icon">👤</text>
+        </view>
+        <view class="user-tags-row">
+          <text class="user-tag text-caption">{{userInfo.injuryPart}}</text>
+          <text class="user-tag text-caption">{{userInfo.injuryType}}</text>
+          <text class="user-tag text-caption text-orange">术后{{userInfo.daysSinceSurgery}}天</text>
+        </view>
+      </view>
+
+      <!-- 内容输入 -->
+      <textarea 
+        class="publish-textarea"
+        placeholder="分享你的康复历程..."
+        value="{{publishContent}}"
+        bindinput="inputPublishContent"
+        maxlength="500"
+      ></textarea>
+
+      <!-- 自动标签提示 -->
+      <view class="auto-tags-hint">
+        <text class="text-caption text-muted">自动添加标签：</text>
+        <text class="text-caption text-orange">#{{userInfo.injuryType}} #术后{{userInfo.daysSinceSurgery}}天</text>
+      </view>
+
+      <!-- 图片列表 -->
+      <view class="publish-images" wx:if="{{publishImages.length > 0}}">
+        <view class="publish-image-item" wx:for="{{publishImages}}" wx:key="index">
+          <image src="{{item}}" mode="aspectFill"></image>
+          <view class="image-delete" data-index="{{index}}" bindtap="deletePublishImage">×</view>
+        </view>
+      </view>
+
+      <!-- 添加图片按钮 -->
+      <view class="add-image-btn" bindtap="addPublishImage">
+        <text class="add-icon">📷</text>
+        <text class="add-text text-caption text-muted">添加图片</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 评论输入框弹窗 -->
+  <view class="comment-modal {{showCommentInput ? 'show' : ''}}" catchtap="closeCommentInput">
+    <view class="comment-input-container" catchtap="preventBubble">
+      <input
+        class="comment-input"
+        placeholder="写下你的评论..."
+        value="{{commentInput}}"
+        bindinput="inputComment"
+        confirm-type="send"
+        bindconfirm="sendComment"
+        focus="{{showCommentInput}}"
+      />
+      <view class="comment-send-btn {{commentInput ? 'active' : ''}}" bindtap="sendComment">
+        <text>发送</text>
+      </view>
+    </view>
+  </view>
+</view>

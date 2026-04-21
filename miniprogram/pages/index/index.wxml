@@ -1,0 +1,250 @@
+<!--pages/index/index.wxml-->
+<view class="page-container">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}};">
+    <view class="nav-content">
+      <text class="page-title">首页</text>
+    </view>
+  </view>
+
+  <!-- 主内容区域 - 使用 flex 布局 -->
+  <view class="content-wrapper" style="margin-top: {{navBarHeight}};">
+    <scroll-view 
+      class="content" 
+      scroll-y="{{true}}"
+      style="height: {{scrollHeight}}px;"
+      lower-threshold="100"
+      bindscrolltolower="loadMoreTimeline"
+    >
+    <!-- 欢迎卡片 -->
+    <view class="welcome-card gradient-bg">
+      <view class="welcome-text">
+        <text class="text-h2">Hi，{{userInfo.nickname}}</text>
+        <text class="text-caption text-secondary mt-10">继续坚持，康复就在眼前</text>
+      </view>
+      <view class="stats-row mt-30">
+        <view class="stat-item" bindtap="goToCalendar">
+          <text class="stat-value big-number">{{stats.totalDays}}</text>
+          <text class="stat-label text-caption text-secondary">总天数</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value big-number">{{stats.checkedInDays}}</text>
+          <text class="stat-label text-caption text-secondary">打卡天数</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value big-number">{{stats.completionRate}}%</text>
+          <text class="stat-label text-caption text-secondary">完成率</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日康复任务简报 -->
+    <view class="section mt-40">
+      <view class="section-header flex-between">
+        <text class="section-title text-h3">今日任务</text>
+        <view class="add-task-btn-inline" bindtap="showAddTaskModal">
+          <text class="text-orange">+ 新增</text>
+        </view>
+      </view>
+      
+      <view class="tasks-brief">
+        <view 
+          class="task-item card" 
+          wx:for="{{checkInStatus.todayTasks}}" 
+          wx:key="id"
+          data-task-id="{{item.id}}"
+          bindtap="toggleTask"
+        >
+          <view class="flex-between">
+            <view class="flex-align-center">
+              <view class="task-checkbox {{item.completed ? 'checked' : ''}}">
+                <text wx:if="{{item.completed}}" class="checkbox-icon">✓</text>
+              </view>
+              <view class="task-info ml-20">
+                <text class="task-name text-body">{{item.name}}</text>
+                <text class="task-sets text-caption text-secondary ml-20">{{item.sets}}组×{{item.reps}}次</text>
+              </view>
+            </view>
+            <view class="task-status">
+              <text wx:if="{{item.completed}}" class="text-orange">已完成</text>
+              <text wx:else class="text-muted">未完成</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    </scroll-view>
+  </view>
+
+  <!-- 悬浮打卡按钮 -->
+  <view class="fab-checkin" bindtap="showQuickRecordModal">
+    <text class="fab-checkin-icon">+</text>
+  </view>
+
+  <!-- 快捷记录弹窗 -->
+  <view class="modal-overlay {{showModal ? 'show' : ''}}" bindtap="hideModal">
+    <view class="quick-record-card {{showModal ? 'show' : ''}}" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">快捷记录</text>
+        <view class="modal-close" bindtap="hideModal">×</view>
+      </view>
+
+      <!-- 记录类型选择 -->
+      <view class="record-type-grid" wx:if="{{!currentRecordType}}">
+        <view class="record-type-item" bindtap="selectRecordType" data-type="angle">
+          <view class="record-type-icon" style="background-color: rgba(0, 150, 255, 0.2);">
+            <text>📐</text>
+          </view>
+          <text class="record-type-name">角度记录</text>
+          <text class="record-type-desc">记录关节活动度</text>
+        </view>
+        <view class="record-type-item" bindtap="selectRecordType" data-type="weight">
+          <view class="record-type-icon" style="background-color: rgba(76, 217, 100, 0.2);">
+            <text>⚖️</text>
+          </view>
+          <text class="record-type-name">负重记录</text>
+          <text class="record-type-desc">记录承重情况</text>
+        </view>
+      </view>
+
+      <!-- 角度记录表单 -->
+      <view class="record-form" wx:if="{{currentRecordType === 'angle'}}">
+        <view class="form-section">
+          <text class="form-label">输入角度</text>
+          <view class="angle-input-row">
+            <input
+              type="number"
+              placeholder="请输入角度"
+              placeholder-class="form-input-placeholder"
+              class="form-input angle-input"
+              bindinput="onAngleInput"
+              value="{{inputAngle}}"
+            />
+            <text class="input-suffix">°</text>
+          </view>
+        </view>
+
+        <view class="form-divider">
+          <text class="divider-text">或</text>
+        </view>
+
+        <view class="form-section">
+          <text class="form-label">上传照片</text>
+          <view class="photo-upload-area" bindtap="uploadAnglePhoto">
+            <image wx:if="{{anglePhoto}}" src="{{anglePhoto}}" mode="aspectFill" class="angle-photo"></image>
+            <view wx:else class="upload-placeholder">
+              <text class="upload-icon">📷</text>
+              <text class="upload-text">点击上传照片</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-actions">
+          <button class="form-btn form-btn-secondary" bindtap="cancelRecord">取消</button>
+          <button class="form-btn form-btn-primary" bindtap="saveAngleRecord">保存</button>
+        </view>
+      </view>
+
+      <!-- 负重记录表单 -->
+      <view class="record-form" wx:if="{{currentRecordType === 'weight'}}">
+        <view class="form-section">
+          <text class="form-label">输入承重</text>
+          <view class="weight-input-row">
+            <input
+              type="digit"
+              placeholder="请输入承重"
+              placeholder-class="form-input-placeholder"
+              class="form-input weight-input"
+              bindinput="onWeightInput"
+              value="{{inputWeight}}"
+            />
+            <view class="unit-selector">
+              <view class="unit-option {{weightUnit === 'kg' ? 'active' : ''}}" bindtap="setWeightUnit" data-unit="kg">kg</view>
+              <view class="unit-option {{weightUnit === '斤' ? 'active' : ''}}" bindtap="setWeightUnit" data-unit="斤">斤</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="form-actions">
+          <button class="form-btn form-btn-secondary" bindtap="cancelRecord">取消</button>
+          <button class="form-btn form-btn-primary" bindtap="saveWeightRecord">保存</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新增任务弹窗 -->
+  <view class="add-task-modal" wx:if="{{showAddTask}}" bindtap="hideAddTaskModal">
+    <view class="add-task-content" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">新增训练任务</text>
+        <view class="modal-close" bindtap="hideAddTaskModal">×</view>
+      </view>
+
+      <view class="add-task-form">
+        <view class="form-item">
+          <text class="form-label">训练动作</text>
+          <input
+            class="form-input"
+            type="text"
+            placeholder="如：直腿抬高"
+            placeholder-class="form-input-placeholder"
+            value="{{newTask.name}}"
+            bindinput="onTaskNameInput"
+            maxlength="20"
+          />
+        </view>
+
+        <view class="form-row mt-20">
+          <view class="form-item half">
+            <text class="form-label">组数</text>
+            <input
+              class="form-input"
+              type="number"
+              placeholder="3"
+              placeholder-class="form-input-placeholder"
+              value="{{newTask.sets}}"
+              bindinput="onTaskSetsInput"
+            />
+          </view>
+          <view class="form-item half">
+            <text class="form-label">每组次数/时长</text>
+            <input
+              class="form-input"
+              type="text"
+              placeholder="10次或1分钟"
+              placeholder-class="form-input-placeholder"
+              value="{{newTask.reps}}"
+              bindinput="onTaskRepsInput"
+            />
+          </view>
+        </view>
+
+        <view class="form-item mt-20">
+          <text class="form-label">训练日期</text>
+          <view class="date-range">
+            <picker mode="date" value="{{newTask.startDate}}" bindchange="onStartDateChange">
+              <view class="date-picker-btn">
+                <text>{{newTask.startDate || '开始日期'}}</text>
+              </view>
+            </picker>
+            <text class="date-separator">至</text>
+            <picker mode="date" value="{{newTask.endDate}}" bindchange="onEndDateChange">
+              <view class="date-picker-btn">
+                <text>{{newTask.endDate || '结束日期'}}</text>
+              </view>
+            </picker>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-actions mt-40">
+        <button class="form-btn form-btn-secondary" bindtap="hideAddTaskModal">取消</button>
+        <button class="form-btn form-btn-primary" bindtap="addTask">确认添加</button>
+      </view>
+    </view>
+  </view>
+</view>
