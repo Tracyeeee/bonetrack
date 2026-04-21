@@ -24,8 +24,8 @@
       </view>
       <view class="stats-row mt-30">
         <view class="stat-item" bindtap="goToCalendar">
-          <text class="stat-value big-number">{{stats.totalDays}}</text>
-          <text class="stat-label text-caption text-secondary">总天数</text>
+          <text class="stat-value big-number">{{userInfo.daysSinceSurgery}}</text>
+          <text class="stat-label text-caption text-secondary">术后/伤后天数</text>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">

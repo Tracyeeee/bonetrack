@@ -3,85 +3,117 @@
   <!-- 顶部导航栏 - 动态高度 -->
   <view class="nav-bar" style="height: {{navBarHeight}};">
     <view class="nav-content">
+      <view class="nav-left"></view>
       <text class="page-title">伤友广场</text>
-    </view>
-  </view>
-
-  <!-- 筛选栏 -->
-  <view class="filter-bar">
-    <view class="filter-btn {{(selectedInjuryTypes.length > 0 || selectedSportBackgrounds.length > 0) ? 'active' : ''}}" bindtap="toggleFilterPanel">
-      <text class="filter-icon">🔍</text>
-      <text class="filter-text">筛选</text>
-      <text class="filter-count" wx:if="{{selectedInjuryTypes.length + selectedSportBackgrounds.length > 0}}">
-        {{selectedInjuryTypes.length + selectedSportBackgrounds.length}}
-      </text>
-    </view>
-    <view class="filter-result" wx:if="{{displayPosts.length !== posts.length}}">
-      <text class="text-caption text-muted">找到 {{displayPosts.length}} 条相关动态</text>
-    </view>
-    <view class="filter-result" wx:else>
-      <text class="text-caption text-muted">全部动态</text>
+      <!-- 筛选按钮 -->
+      <view class="filter-btn {{hasActiveFilter ? 'active' : ''}}" bindtap="toggleFilter">
+        <text class="filter-icon">{{hasActiveFilter ? '🎯' : '🔍'}}</text>
+        <text class="filter-text text-caption">{{hasActiveFilter ? '筛选中' : '筛选'}}</text>
+      </view>
     </view>
   </view>
 
   <!-- 筛选面板 -->
-  <view class="filter-panel {{showFilterPanel ? 'show' : ''}}" wx:if="{{showFilterPanel}}">
-    <view class="filter-mask" bindtap="closeFilterPanel"></view>
-    <view class="filter-content">
-      <!-- 损伤类型筛选 -->
-      <view class="filter-section">
-        <view class="filter-section-header">
-          <text class="filter-section-title">损伤类型</text>
-          <text class="filter-section-clear" wx:if="{{selectedInjuryTypes.length > 0}}" bindtap="toggleInjuryType" data-id="clear">清除</text>
-        </view>
-        <view class="filter-tags">
-          <view
-            class="filter-tag {{selectedInjuryTypes.indexOf(item.id) > -1 ? 'selected' : ''}}"
-            wx:for="{{injuryTypeOptions}}"
-            wx:key="id"
-            data-id="{{item.id}}"
-            bindtap="toggleInjuryType"
-          >
-            {{item.name}}
-          </view>
-        </view>
+  <view class="filter-panel {{showFilter ? 'show' : ''}}" catchtap="closeFilter">
+    <view class="filter-content" catchtap="preventBubble">
+      <view class="filter-header">
+        <text class="filter-title text-h3">筛选</text>
+        <view class="filter-close" bindtap="closeFilter">×</view>
       </view>
 
-      <!-- 运动背景筛选 -->
-      <view class="filter-section">
-        <view class="filter-section-header">
-          <text class="filter-section-title">运动背景</text>
-          <text class="filter-section-clear" wx:if="{{selectedSportBackgrounds.length > 0}}" bindtap="toggleSportBackground" data-id="clear">清除</text>
-        </view>
-        <view class="filter-tags">
-          <view
-            class="filter-tag {{selectedSportBackgrounds.indexOf(item.id) > -1 ? 'selected' : ''}}"
-            wx:for="{{sportBackgroundOptions}}"
-            wx:key="id"
-            data-id="{{item.id}}"
-            bindtap="toggleSportBackground"
-          >
-            <text>{{item.icon}}</text>
-            <text class="tag-name">{{item.name}}</text>
+      <scroll-view class="filter-scroll" scroll-y="{{true}}">
+        <!-- 损伤部位 -->
+        <view class="filter-section">
+          <view class="filter-section-title">
+            <text class="text-body text-secondary">损伤部位</text>
+          </view>
+          <view class="filter-tags-row">
+            <view
+              class="filter-tag {{selectedPart === item.id ? 'selected' : ''}}"
+              wx:for="{{filterTags}}"
+              wx:key="id"
+              data-id="{{item.id}}"
+              bindtap="selectPartFilter"
+            >
+              {{item.name}}
+            </view>
+          </view>
+
+          <!-- 详细部位（选中大类后显示） -->
+          <view class="filter-tags-row sub-tags" wx:if="{{selectedPart && detailOptions.length > 0}}">
+            <view
+              class="filter-tag small {{selectedPartDetail === item.id ? 'selected' : ''}}"
+              wx:for="{{detailOptions}}"
+              wx:key="id"
+              data-id="{{item.id}}"
+              bindtap="selectPartDetailFilter"
+            >
+              {{item.name}}
+            </view>
           </view>
         </view>
-      </view>
+
+        <!-- 损伤类型（选中详细部位后显示） -->
+        <view class="filter-section" wx:if="{{selectedPartDetail && injuryTypeOptions.length > 0}}">
+          <view class="filter-section-title">
+            <text class="text-body text-secondary">损伤类型</text>
+          </view>
+          <view class="filter-tags-row">
+            <view
+              class="filter-tag small {{selectedInjuryType === item.id ? 'selected' : ''}}"
+              wx:for="{{injuryTypeOptions}}"
+              wx:key="id"
+              data-id="{{item.id}}"
+              bindtap="selectInjuryTypeFilter"
+            >
+              {{item.name}}
+            </view>
+          </view>
+        </view>
+
+        <!-- 运动背景 -->
+        <view class="filter-section">
+          <view class="filter-section-title">
+            <text class="text-body text-secondary">运动背景</text>
+          </view>
+          <view class="filter-tags-row">
+            <view
+              class="filter-tag {{selectedSportBackground === item.id ? 'selected' : ''}}"
+              wx:for="{{sportBackgroundOptions}}"
+              wx:key="id"
+              data-id="{{item.id}}"
+              bindtap="selectSportBgFilter"
+            >
+              {{item.icon}} {{item.name}}
+            </view>
+          </view>
+        </view>
+      </scroll-view>
 
       <!-- 筛选操作按钮 -->
       <view class="filter-actions">
-        <view class="filter-reset-btn" bindtap="resetFilter">
-          <text>重置</text>
+        <view class="filter-reset" bindtap="resetFilter">
+          <text class="text-body">重置</text>
         </view>
-        <view class="filter-confirm-btn" bindtap="applyFilter">
-          <text>确定</text>
+        <view class="filter-confirm" bindtap="applyFilter">
+          <text class="text-body text-white">应用筛选</text>
         </view>
       </view>
     </view>
   </view>
 
-  <scroll-view class="content {{showFilterPanel ? 'content-hidden' : ''}}" scroll-y="{{true}}" style="margin-top: calc({{navBarHeight}} + 90rpx);">
+  <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};" catchtouchmove="preventBubble">
+    <!-- 筛选结果为空提示 -->
+    <view class="empty-filter-result" wx:if="{{displayPosts.length === 0 && hasActiveFilter}}">
+      <text class="empty-icon">🔍</text>
+      <text class="text-body text-secondary">暂无符合条件的帖子</text>
+      <view class="reset-hint" bindtap="resetFilter">
+        <text class="text-caption text-orange">点击重置筛选</text>
+      </view>
+    </view>
+
     <!-- 动态列表 -->
-    <view class="posts-list">
+    <view class="posts-list" wx:else>
       <view class="post-card card" wx:for="{{displayPosts}}" wx:key="id">
         <!-- 用户信息 -->
         <view class="post-header">

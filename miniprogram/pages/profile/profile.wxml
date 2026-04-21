@@ -223,7 +223,7 @@ module.exports = {
       <view class="days-info card mt-30" wx:if="{{surgeryDate}}">
         <text class="text-caption text-secondary">截至今日</text>
         <view class="days-display">
-          <text class="big-number text-orange">{{userInfo.daysSinceSurgery || '?'}}</text>
+          <text class="big-number text-orange">{{userInfo.daysSinceSurgery === 0 ? 0 : (userInfo.daysSinceSurgery || '?')}}</text>
           <text class="text-h3 text-secondary ml-20">天</text>
         </view>
         <text class="text-caption text-muted mt-10">术后康复进行中</text>
@@ -269,7 +269,7 @@ module.exports = {
       <view class="days-info card mt-30" wx:if="{{injuryDate}}">
         <text class="text-caption text-secondary">截至今日</text>
         <view class="days-display">
-          <text class="big-number text-orange">{{userInfo.daysSinceSurgery || '?'}}</text>
+          <text class="big-number text-orange">{{userInfo.daysSinceSurgery === 0 ? 0 : (userInfo.daysSinceSurgery || '?')}}</text>
           <text class="text-h3 text-secondary ml-20">天</text>
         </view>
         <text class="text-caption text-muted mt-10">康复进行中</text>

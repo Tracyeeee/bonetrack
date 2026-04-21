@@ -12,42 +12,87 @@ Page({
       isAuthorized: false
     },
 
-    // 筛选选项 - 损伤类型
-    injuryTypeOptions: [
-      { id: 'acl', name: 'ACL断裂' },
-      { id: 'pcl', name: 'PCL断裂' },
-      { id: 'meniscus_tear', name: '半月板撕裂' },
-      { id: 'meniscus_dislocation', name: '半月板脱位' },
-      { id: 'mcl', name: 'MCL损伤' },
-      { id: 'lcl', name: 'LCL损伤' },
-      { id: 'patella', name: '髌骨骨折' },
-      { id: 'tibial_plateau', name: '胫骨平台骨折' },
-      { id: 'atfl', name: 'ATFL损伤' },
-      { id: 'cfl', name: 'CFL损伤' },
-      { id: 'syndesmosis', name: '下胫腓联合损伤' },
-      { id: 'achilles', name: '跟腱断裂' },
-      { id: 'ankle_fracture', name: '踝关节骨折' },
-      { id: 'labrum', name: '盂唇撕裂' },
-      { id: 'femoral_neck', name: '股骨颈骨折' },
-      { id: 'rotator_tear', name: '肩袖撕裂' },
-      { id: 'slap', name: 'SLAP损伤' },
-      { id: 'bankart', name: 'Bankart损伤' },
-      { id: 'disc_herniation', name: '腰椎间盘突出' },
-      { id: 'other', name: '其他' }
+    // 筛选相关数据
+    showFilter: false, // 是否显示筛选面板
+    filterTags: [
+      // 损伤部位（与伤情简历完全一致）
+      { id: 'lower_limb', name: '下肢', children: [
+        { id: 'knee', name: '膝关节', children: [
+          { id: 'acl', name: 'ACL断裂' },
+          { id: 'pcl', name: 'PCL断裂' },
+          { id: 'meniscus_tear', name: '半月板撕裂' },
+          { id: 'meniscus_dislocation', name: '半月板脱位' },
+          { id: 'mcl', name: 'MCL损伤' },
+          { id: 'lcl', name: 'LCL损伤' },
+          { id: 'patella', name: '髌骨骨折' },
+          { id: 'tibial_plateau', name: '胫骨平台骨折' },
+          { id: 'knee_other', name: '其他' }
+        ]},
+        { id: 'ankle', name: '踝关节', children: [
+          { id: 'atfl', name: 'ATFL损伤' },
+          { id: 'cfl', name: 'CFL损伤' },
+          { id: 'syndesmosis', name: '下胫腓联合损伤' },
+          { id: 'achilles', name: '跟腱断裂' },
+          { id: 'ankle_fracture', name: '踝关节骨折' },
+          { id: 'ankle_other', name: '其他' }
+        ]},
+        { id: 'hip', name: '髋关节', children: [
+          { id: 'labrum', name: '盂唇撕裂' },
+          { id: 'femoral_neck', name: '股骨颈骨折' },
+          { id: 'hip_other', name: '其他' }
+        ]}
+      ]},
+      { id: 'upper_limb', name: '上肢', children: [
+        { id: 'shoulder', name: '肩关节', children: [
+          { id: 'rotator_tear', name: '肩袖撕裂' },
+          { id: 'slap', name: 'SLAP损伤' },
+          { id: 'bankart', name: 'Bankart损伤' },
+          { id: 'ac_joint', name: '肩锁关节损伤' },
+          { id: 'clavicle', name: '锁骨骨折' },
+          { id: 'shoulder_other', name: '其他' }
+        ]},
+        { id: 'elbow', name: '肘关节', children: [
+          { id: 'tennis_elbow', name: '网球肘' },
+          { id: 'golfer_elbow', name: '高尔夫球肘' },
+          { id: 'elbow_fracture', name: '肘关节骨折' },
+          { id: 'elbow_other', name: '其他' }
+        ]},
+        { id: 'wrist', name: '腕关节', children: [
+          { id: 'carpal_tunnel', name: '腕管综合征' },
+          { id: 'wrist_fracture', name: '腕骨骨折' },
+          { id: 'tfcc', name: 'TFCC损伤' },
+          { id: 'wrist_other', name: '其他' }
+        ]}
+      ]},
+      { id: 'spine', name: '脊柱', children: [
+        { id: 'cervical', name: '颈椎', children: [
+          { id: 'cervical_disc', name: '颈椎间盘突出' },
+          { id: 'cervical_sprain', name: '颈椎扭伤' },
+          { id: 'cervical_other', name: '其他' }
+        ]},
+        { id: 'lumbar', name: '腰椎', children: [
+          { id: 'disc_herniation', name: '腰椎间盘突出' },
+          { id: 'disc_degeneration', name: '椎间盘退变' },
+          { id: 'spinal_stenosis', name: '椎管狭窄' },
+          { id: 'lumbar_sprain', name: '腰扭伤' },
+          { id: 'lumbar_other', name: '其他' }
+        ]}
+      ]}
     ],
-
-    // 筛选选项 - 运动背景
+    detailOptions: [], // 当前选中部位的详细部位选项
+    injuryTypeOptions: [], // 当前选中详细部位的损伤类型选项
     sportBackgroundOptions: [
       { id: 'professional', name: '专业运动员', icon: '🏆' },
       { id: 'amateur', name: '运动爱好者', icon: '⚽' },
       { id: 'occasional', name: '偶尔运动', icon: '🚶' },
       { id: 'sedentary', name: '久坐为主', icon: '🧘' }
     ],
-
-    // 当前筛选条件
-    selectedInjuryTypes: [], // 选中的损伤类型
-    selectedSportBackgrounds: [], // 选中的运动背景
-    showFilterPanel: false, // 是否显示筛选面板
+    // 选中的筛选条件
+    selectedPart: null, // 选中的损伤部位
+    selectedPartDetail: null, // 选中的详细部位
+    selectedInjuryType: null, // 选中的损伤类型
+    selectedSportBackground: null, // 选中的运动背景
+    hasActiveFilter: false, // 是否有激活的筛选
 
     // 动态列表
     posts: [
@@ -199,108 +244,6 @@ Page({
     });
   },
 
-  // 切换筛选面板显示
-  toggleFilterPanel() {
-    this.setData({
-      showFilterPanel: !this.data.showFilterPanel
-    });
-  },
-
-  // 关闭筛选面板
-  closeFilterPanel() {
-    this.setData({
-      showFilterPanel: false
-    });
-  },
-
-  // 切换损伤类型筛选
-  toggleInjuryType(e) {
-    const id = e.currentTarget.dataset.id;
-
-    // 清除按钮
-    if (id === 'clear') {
-      this.setData({ selectedInjuryTypes: [] });
-      return;
-    }
-
-    const selected = this.data.selectedInjuryTypes;
-    const index = selected.indexOf(id);
-
-    if (index > -1) {
-      selected.splice(index, 1);
-    } else {
-      selected.push(id);
-    }
-
-    this.setData({
-      selectedInjuryTypes: selected
-    });
-  },
-
-  // 切换运动背景筛选
-  toggleSportBackground(e) {
-    const id = e.currentTarget.dataset.id;
-
-    // 清除按钮
-    if (id === 'clear') {
-      this.setData({ selectedSportBackgrounds: [] });
-      return;
-    }
-
-    const selected = this.data.selectedSportBackgrounds;
-    const index = selected.indexOf(id);
-
-    if (index > -1) {
-      selected.splice(index, 1);
-    } else {
-      selected.push(id);
-    }
-
-    this.setData({
-      selectedSportBackgrounds: selected
-    });
-  },
-
-  // 应用筛选
-  applyFilter() {
-    const { selectedInjuryTypes, selectedSportBackgrounds, posts } = this.data;
-
-    // 如果没有筛选条件，显示全部
-    if (selectedInjuryTypes.length === 0 && selectedSportBackgrounds.length === 0) {
-      this.setData({
-        displayPosts: posts,
-        showFilterPanel: false
-      });
-      return;
-    }
-
-    // 筛选帖子
-    const filteredPosts = posts.filter(post => {
-      // 检查损伤类型匹配
-      const injuryMatch = selectedInjuryTypes.length === 0 ||
-        selectedInjuryTypes.some(type => post.injuryType.includes(type));
-
-      // 检查运动背景匹配
-      const backgroundMatch = selectedSportBackgrounds.length === 0 ||
-        selectedSportBackgrounds.some(bg => post.sportBackground.includes(bg));
-
-      return injuryMatch && backgroundMatch;
-    });
-
-    this.setData({
-      displayPosts: filteredPosts,
-      showFilterPanel: false
-    });
-  },
-
-  // 重置筛选
-  resetFilter() {
-    this.setData({
-      selectedInjuryTypes: [],
-      selectedSportBackgrounds: []
-    });
-  },
-
   // 初始化导航栏（从全局获取）
   initNavBar() {
     const navBarInfo = app.getNavBarInfo();
@@ -327,7 +270,7 @@ Page({
       const surgeryDate = new Date(userInfo.surgeryDate);
       const today = new Date();
       const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
-      
+
       this.setData({
         userInfo: {
           ...this.data.userInfo,
@@ -341,9 +284,186 @@ Page({
     }
   },
 
+  // ============ 筛选相关方法 ============
+
+  // 切换筛选面板显示
+  toggleFilter() {
+    this.setData({
+      showFilter: !this.data.showFilter
+    });
+  },
+
+  // 关闭筛选面板
+  closeFilter() {
+    this.setData({
+      showFilter: false
+    });
+  },
+
+  // 阻止事件冒泡
+  preventBubble() {
+    // 空方法，用于阻止事件冒泡
+  },
+
+  // 选择损伤部位大类
+  selectPartFilter(e) {
+    const partId = e.currentTarget.dataset.id;
+    const part = this.data.filterTags.find(p => p.id === partId);
+
+    // 如果点击已选中的部位，则取消选择
+    if (this.data.selectedPart === partId) {
+      this.setData({
+        selectedPart: null,
+        selectedPartDetail: null,
+        selectedInjuryType: null,
+        detailOptions: [],
+        injuryTypeOptions: []
+      });
+    } else {
+      this.setData({
+        selectedPart: partId,
+        selectedPartDetail: null,
+        selectedInjuryType: null,
+        detailOptions: part ? part.children : [],
+        injuryTypeOptions: []
+      });
+    }
+  },
+
+  // 选择损伤详细部位
+  selectPartDetailFilter(e) {
+    const detailId = e.currentTarget.dataset.id;
+    const part = this.data.filterTags.find(p => p.id === this.data.selectedPart);
+    const detail = part ? part.children.find(d => d.id === detailId) : null;
+
+    // 如果点击已选中的详细部位，则取消选择
+    if (this.data.selectedPartDetail === detailId) {
+      this.setData({
+        selectedPartDetail: null,
+        selectedInjuryType: null,
+        injuryTypeOptions: []
+      });
+    } else {
+      this.setData({
+        selectedPartDetail: detailId,
+        selectedInjuryType: null,
+        injuryTypeOptions: detail && detail.children ? detail.children : []
+      });
+    }
+  },
+
+  // 选择损伤类型
+  selectInjuryTypeFilter(e) {
+    const typeId = e.currentTarget.dataset.id;
+
+    // 如果点击已选中的类型，则取消选择
+    if (this.data.selectedInjuryType === typeId) {
+      this.setData({
+        selectedInjuryType: null
+      });
+    } else {
+      this.setData({
+        selectedInjuryType: typeId
+      });
+    }
+  },
+
+  // 选择运动背景
+  selectSportBgFilter(e) {
+    const bgId = e.currentTarget.dataset.id;
+
+    // 如果点击已选中的运动背景，则取消选择
+    if (this.data.selectedSportBackground === bgId) {
+      this.setData({
+        selectedSportBackground: null
+      });
+    } else {
+      this.setData({
+        selectedSportBackground: bgId
+      });
+    }
+  },
+
+  // 应用筛选
+  applyFilter() {
+    this.applyFilters();
+    this.setData({
+      showFilter: false
+    });
+  },
+
+  // 执行实际筛选逻辑
+  applyFilters() {
+    const { selectedPart, selectedPartDetail, selectedInjuryType, selectedSportBackground } = this.data;
+
+    // 检查是否有激活的筛选
+    const hasActiveFilter = !!(selectedPart || selectedPartDetail || selectedInjuryType || selectedSportBackground);
+    this.setData({ hasActiveFilter });
+
+    // 根据筛选条件过滤帖子
+    let filteredPosts = this.data.posts;
+
+    if (selectedPartDetail && selectedInjuryType) {
+      // 三级筛选：部位 -> 详细部位 -> 损伤类型
+      const part = this.data.filterTags.find(p => p.id === selectedPart);
+      const detail = part ? part.children.find(d => d.id === selectedPartDetail) : null;
+      const type = detail && detail.children ? detail.children.find(t => t.id === selectedInjuryType) : null;
+
+      filteredPosts = filteredPosts.filter(post =>
+        post.injuryPart === (detail ? detail.name : selectedPartDetail) &&
+        post.injuryType === (type ? type.name : selectedInjuryType)
+      );
+    } else if (selectedPartDetail) {
+      // 二级筛选：部位 -> 详细部位
+      const part = this.data.filterTags.find(p => p.id === selectedPart);
+      const detail = part ? part.children.find(d => d.id === selectedPartDetail) : null;
+      filteredPosts = filteredPosts.filter(post =>
+        post.injuryPart === (detail ? detail.name : selectedPartDetail)
+      );
+    } else if (selectedPart) {
+      // 一级筛选：部位大类
+      filteredPosts = filteredPosts.filter(post => {
+        // 根据大类匹配对应的部位
+        const partMapping = {
+          'lower_limb': ['膝关节', '踝关节', '髋关节'],
+          'upper_limb': ['肩关节', '肘关节', '腕关节'],
+          'spine': ['颈椎', '腰椎']
+        };
+        return partMapping[selectedPart] && partMapping[selectedPart].includes(post.injuryPart);
+      });
+    }
+
+    if (selectedSportBackground) {
+      const bg = this.data.sportBackgroundOptions.find(b => b.id === selectedSportBackground);
+      filteredPosts = filteredPosts.filter(post =>
+        post.sportBackground === (bg ? bg.name : selectedSportBackground)
+      );
+    }
+
+    this.setData({
+      displayPosts: filteredPosts
+    });
+  },
+
+  // 重置筛选
+  resetFilter() {
+    this.setData({
+      selectedPart: null,
+      selectedPartDetail: null,
+      selectedInjuryType: null,
+      selectedSportBackground: null,
+      detailOptions: [],
+      injuryTypeOptions: [],
+      hasActiveFilter: false,
+      displayPosts: this.data.posts
+    });
+  },
+
   // 点赞
   toggleLike(e) {
     const postId = e.currentTarget.dataset.id;
+
+    // 更新 posts
     const posts = this.data.posts.map(post => {
       if (post.id === postId) {
         return {
@@ -354,19 +474,24 @@ Page({
       }
       return post;
     });
-    const displayPosts = posts.map(post => {
-      const displayPost = this.data.displayPosts.find(p => p.id === postId);
-      if (displayPost) {
-        return { ...post, showComments: displayPost.showComments };
+
+    // 更新 displayPosts（如果该 post 在筛选结果中）
+    const displayPosts = this.data.displayPosts.map(post => {
+      if (post.id === postId) {
+        const updatedPost = posts.find(p => p.id === postId);
+        return { ...updatedPost, showComments: post.showComments };
       }
       return post;
     });
+
     this.setData({ posts, displayPosts });
   },
 
   // 评论 - 切换评论列表显示/隐藏
   commentPost(e) {
     const postId = e.currentTarget.dataset.id;
+
+    // 更新 posts
     const posts = this.data.posts.map(post => {
       if (post.id === postId) {
         return {
@@ -376,13 +501,16 @@ Page({
       }
       return post;
     });
-    const displayPosts = posts.map(post => {
-      const displayPost = this.data.displayPosts.find(p => p.id === postId);
-      if (displayPost) {
-        return { ...post, showComments: displayPost.showComments };
+
+    // 更新 displayPosts（如果该 post 在筛选结果中）
+    const displayPosts = this.data.displayPosts.map(post => {
+      if (post.id === postId) {
+        const updatedPost = posts.find(p => p.id === postId);
+        return { ...updatedPost };
       }
       return post;
     });
+
     this.setData({ posts, displayPosts });
   },
 
@@ -440,10 +568,10 @@ Page({
       return post;
     });
 
-    const displayPosts = posts.map(post => {
-      const displayPost = this.data.displayPosts.find(p => p.id === currentCommentPostId);
-      if (displayPost) {
-        return { ...post, showComments: true };
+    const displayPosts = this.data.displayPosts.map(post => {
+      if (post.id === currentCommentPostId) {
+        const updatedPost = posts.find(p => p.id === currentCommentPostId);
+        return { ...updatedPost };
       }
       return post;
     });

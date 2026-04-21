@@ -274,50 +274,83 @@ Page({
   // 加载用户信息
   loadUserInfo() {
     const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo && userInfo.surgeryDate) {
-      const surgeryDate = new Date(userInfo.surgeryDate);
-      const today = new Date();
-      const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
+    if (userInfo) {
+      let daysSinceSurgery = '--';
 
-      // 检查日期是否有效
-      const isValidDate = !isNaN(daysDiff) && daysDiff >= 0;
+      // 优先使用保存的 daysSinceSurgery，否则根据日期计算
+      if (userInfo.daysSinceSurgery !== undefined && userInfo.daysSinceSurgery !== null) {
+        daysSinceSurgery = userInfo.daysSinceSurgery;
+      } else if (userInfo.surgeryDate || userInfo.injuryDate) {
+        const targetDate = userInfo.surgeryDate || userInfo.injuryDate;
+        const surgeryDate = new Date(targetDate + 'T00:00:00+08:00');
+        const today = new Date();
+        const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
+        if (!isNaN(daysDiff) && daysDiff >= 0) {
+          daysSinceSurgery = daysDiff;
+        }
+      }
+
+      // 支持保守治疗（只有受伤日期）
+      let treatmentDate = userInfo.surgeryDate || userInfo.injuryDate;
+      let treatmentLabel = userInfo.surgeryDate ? '术后' : '受伤后';
 
       this.setData({
         userInfo: {
           ...this.data.userInfo,
-          daysSinceSurgery: isValidDate ? daysDiff : '--',
+          daysSinceSurgery: daysSinceSurgery,
+          treatmentLabel: treatmentLabel,
+          treatmentDate: treatmentDate,
           injuryPart: userInfo.injuryPart,
           injuryType: userInfo.injuryType,
           avatar: userInfo.avatar || '',
           nickname: userInfo.nickname || '康复勇士'
-        }
+        },
+        // 更新统计的总天数基数
+        'stats.totalDays': daysSinceSurgery !== '--' ? daysSinceSurgery : 0
       });
+
+      // 同时更新打卡天数的统计范围
+      this.updateStats();
     }
   },
 
   // 更新统计数据
   updateStats() {
-    let totalDays = this.data.stats.totalDays;
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    const treatmentDate = userInfo.surgeryDate || userInfo.injuryDate;
+
+    let totalDays = 0;
     let checkedInDays = 0;
-    
-    // 统计过去 totalDays 天的打卡记录
-    for (let i = 0; i < totalDays; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = this.formatDate(date);
-      const record = wx.getStorageSync(`checkin_${dateStr}`);
-      if (record && (record.angle || record.weight || (record.photos && record.photos.length > 0))) {
-        checkedInDays++;
+
+    if (treatmentDate) {
+      // 计算实际术后/受伤天数
+      const startDate = new Date(treatmentDate + 'T00:00:00+08:00');
+      const today = new Date();
+      totalDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+
+      // 如果是负数（未来日期），设为0
+      if (totalDays < 0) totalDays = 0;
+
+      // 统计从手术/受伤日期到今天的打卡记录
+      for (let i = 0; i <= totalDays; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        const dateStr = this.formatDate(date);
+        const record = wx.getStorageSync(`checkin_${dateStr}`);
+        if (record && (record.angle || record.weight || (record.photos && record.photos.length > 0))) {
+          checkedInDays++;
+        }
       }
     }
 
     const completionRate = totalDays > 0 ? Math.round((checkedInDays / totalDays) * 100) : 0;
-    
+
     this.setData({
       stats: {
-        ...this.data.stats,
+        totalDays: totalDays,
         checkedInDays,
-        completionRate
+        completionRate,
+        latestAngle: this.data.stats.latestAngle || 0
       }
     });
   },

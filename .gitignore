@@ -12,3 +12,23 @@ $RECYCLE.BIN/
 
 # Node.js
 node_modules/
+
+# 微信小程序
+miniprogram/components/
+miniprogram/pages/*/ismap
+miniprogram/pages/*/wxss.js
+miniprogram/pages/*/wxml.js
+miniprogram/pages/*/json.js
+miniprogram/pages/*/js.js
+.project.lock.json
+*.log
+project.private.config.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 其他
+.env

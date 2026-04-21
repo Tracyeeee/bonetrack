@@ -354,10 +354,13 @@ Page({
     const targetDate = new Date(today);
     targetDate.setDate(targetDate.getDate() - days);
     const dateStr = this.formatDate(targetDate);
-    
-    const selectedDate = new Date(dateStr);
-    const daysDiff = Math.floor((today - selectedDate) / (1000 * 60 * 60 * 24));
-    
+
+    // 使用日期字符串创建日期对象，避免时区问题，统一使用北京时间00:00:00
+    const selectedDate = new Date(dateStr + 'T00:00:00+08:00');
+    const todayStr = this.formatDate(today) + 'T00:00:00+08:00';
+    const todayDateObj = new Date(todayStr);
+    const daysDiff = Math.floor((todayDateObj - selectedDate) / (1000 * 60 * 60 * 24));
+
     if (type === 'conservative') {
       this.setData({
         injuryDate: dateStr,
@@ -379,12 +382,16 @@ Page({
   bindSurgeryDateChange(e) {
     const date = e.detail.value;
     const today = new Date();
-    const selectedDate = new Date(date);
-    const daysDiff = Math.floor((today - selectedDate) / (1000 * 60 * 60 * 24));
-    
+    // 使用日期字符串创建日期对象，避免时区问题，统一使用北京时间00:00:00
+    const selectedDate = new Date(date + 'T00:00:00+08:00');
+    const todayStr = this.formatDate(today) + 'T00:00:00+08:00';
+    const todayDateObj = new Date(todayStr);
+    const daysDiff = Math.floor((todayDateObj - selectedDate) / (1000 * 60 * 60 * 24));
+
     this.setData({
       surgeryDate: date,
       'userInfo.surgeryDate': date,
+      'userInfo.injuryDate': '',
       'userInfo.daysSinceSurgery': daysDiff,
       'userInfo.hasModified': true
     });
@@ -394,9 +401,12 @@ Page({
   bindInjuryDateChange(e) {
     const date = e.detail.value;
     const today = new Date();
-    const selectedDate = new Date(date);
-    const daysDiff = Math.floor((today - selectedDate) / (1000 * 60 * 60 * 24));
-    
+    // 使用日期字符串创建日期对象，避免时区问题，统一使用北京时间00:00:00
+    const selectedDate = new Date(date + 'T00:00:00+08:00');
+    const todayStr = this.formatDate(today) + 'T00:00:00+08:00';
+    const todayDateObj = new Date(todayStr);
+    const daysDiff = Math.floor((todayDateObj - selectedDate) / (1000 * 60 * 60 * 24));
+
     this.setData({
       injuryDate: date,
       'userInfo.injuryDate': date,
@@ -684,38 +694,7 @@ Page({
           });
           return false;
         }
-        if (!this.data.userInfo.injuryCause) {
-          wx.showToast({
-            title: '请选择或输入损伤原因',
-            icon: 'none'
-          });
-          return false;
-        }
-        // 如果选择运动损伤，需要选择运动类型
-        if (this.data.userInfo.injuryCause === '运动损伤' && !this.data.userInfo.sportsType) {
-          wx.showToast({
-            title: '请选择具体运动类型',
-            icon: 'none'
-          });
-          return false;
-        }
-        if (!this.data.userInfo.sportsBackground) {
-          wx.showToast({
-            title: '请选择运动背景',
-            icon: 'none'
-          });
-          return false;
-        }
-        // 如果选择运动爱好者，需要选择喜欢的运动
-        if (this.data.userInfo.sportsBackground === '运动爱好者') {
-          if (this.data.selectedSportsList.length === 0 && !this.data.isCustomSports) {
-            wx.showToast({
-              title: '请选择喜欢的运动',
-              icon: 'none'
-            });
-            return false;
-          }
-        }
+        // 损伤原因和运动背景已改为非必填，无需验证
         return true;
       default:
         return true;
