@@ -50,9 +50,9 @@
       </view>
       
       <view class="tasks-brief">
-        <view 
-          class="task-item card" 
-          wx:for="{{checkInStatus.todayTasks}}" 
+        <view
+          class="task-item card"
+          wx:for="{{checkInStatus.todayTasks}}"
           wx:key="id"
           data-task-id="{{item.id}}"
           bindtap="toggleTask"
@@ -67,9 +67,12 @@
                 <text class="task-sets text-caption text-secondary ml-20">{{item.sets}}组×{{item.reps}}次</text>
               </view>
             </view>
-            <view class="task-status">
-              <text wx:if="{{item.completed}}" class="text-orange">已完成</text>
-              <text wx:else class="text-muted">未完成</text>
+            <view class="task-actions">
+              <text wx:if="{{item.completed}}" class="text-orange task-status">已完成</text>
+              <text wx:else class="text-muted task-status">未完成</text>
+              <view class="delete-btn" catchtap="deleteTask" data-task-id="{{item.id}}">
+                <text class="delete-icon">×</text>
+              </view>
             </view>
           </view>
         </view>

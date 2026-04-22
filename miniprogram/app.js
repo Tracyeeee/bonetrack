@@ -1,10 +1,25 @@
 // app.js
 App({
   globalData: {
-    env: '', // 云开发环境ID
+    env: 'cloud1-d9g2o0owa3e2aeffe', // 云开发环境ID
     userInfo: null,
     openId: '',
-    navBarInfo: null // 全局导航栏信息
+    navBarInfo: null, // 全局导航栏信息
+    // 全局训练任务列表
+    taskList: [
+      { id: 1, name: '直腿抬高', category: 'strength', sets: 3, reps: 10 },
+      { id: 2, name: '踝泵运动', category: 'range', sets: 3, reps: 20 },
+      { id: 3, name: '股四头肌收缩', category: 'strength', sets: 3, reps: 15 },
+      { id: 4, name: '膝关节屈伸', category: 'range', sets: 3, reps: 15 },
+      { id: 5, name: '平衡垫站立', category: 'balance', sets: 3, reps: '1分钟' }
+    ],
+    alarmTimer: null, // 闹钟定时器
+    lastReminderDate: '' // 上次提醒日期
+  },
+
+  // 获取全局任务列表
+  getTaskList() {
+    return this.globalData.taskList;
   },
 
   onLaunch: function () {
@@ -23,11 +38,95 @@ App({
       });
     }
 
-    // 静默登录获取OpenID（可选，需要云开发环境）
-    // this.silentLogin();
+    // 静默登录获取OpenID（云开发环境）
+    this.silentLogin();
 
     // 检查更新
     this.checkUpdate();
+
+    // 初始化闹钟
+    this.initAlarm();
+  },
+
+  // 页面显示时检查闹钟
+  onShow: function () {
+    this.initAlarm();
+  },
+
+  // 页面隐藏时清除定时器
+  onHide: function () {
+    this.clearAlarm();
+  },
+
+  // 初始化闹钟
+  initAlarm() {
+    const reminderTime = wx.getStorageSync('reminderTime');
+    if (!reminderTime) return;
+
+    const today = this.formatDate(new Date());
+    const lastDate = this.globalData.lastReminderDate;
+
+    // 检查是否今天已提醒过
+    if (lastDate === today) return;
+
+    const timeRegex = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    if (!timeRegex.test(reminderTime)) return;
+
+    const [hours, minutes] = reminderTime.split(':').map(Number);
+    const now = new Date();
+    const alarmTime = new Date();
+    alarmTime.setHours(hours, minutes, 0, 0);
+
+    // 如果设定时间已过，设置明天的闹钟
+    if (alarmTime <= now) {
+      alarmTime.setDate(alarmTime.getDate() + 1);
+    }
+
+    const delayMs = alarmTime - now;
+
+    // 清除之前的定时器
+    this.clearAlarm();
+
+    // 设置新的定时器
+    this.globalData.alarmTimer = setTimeout(() => {
+      this.triggerReminder();
+    }, delayMs);
+
+    console.log('闹钟已设置:', alarmTime.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+  },
+
+  // 触发提醒
+  triggerReminder() {
+    const today = this.formatDate(new Date());
+    this.globalData.lastReminderDate = today;
+
+    // 弹出提醒
+    wx.showModal({
+      title: '康复提醒',
+      content: '该进行今日的康复训练了！',
+      showCancel: false,
+      confirmText: '知道了',
+      success: () => {
+        // 重新设置明天的闹钟
+        this.initAlarm();
+      }
+    });
+  },
+
+  // 清除闹钟
+  clearAlarm() {
+    if (this.globalData.alarmTimer) {
+      clearTimeout(this.globalData.alarmTimer);
+      this.globalData.alarmTimer = null;
+    }
+  },
+
+  // 格式化日期
+  formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   },
 
   // 计算导航栏信息（沉浸式方案：胶囊底部 + 2px间距）

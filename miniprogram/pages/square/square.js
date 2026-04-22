@@ -1,5 +1,6 @@
 // pages/square/square.js
 const app = getApp();
+const cloud = require('../../utils/cloud.js');
 
 Page({
   data: {
@@ -82,16 +83,35 @@ Page({
     detailOptions: [], // 当前选中部位的详细部位选项
     injuryTypeOptions: [], // 当前选中详细部位的损伤类型选项
     sportBackgroundOptions: [
-      { id: 'professional', name: '专业运动员', icon: '🏆' },
-      { id: 'amateur', name: '运动爱好者', icon: '⚽' },
-      { id: 'occasional', name: '偶尔运动', icon: '🚶' },
-      { id: 'sedentary', name: '久坐为主', icon: '🧘' }
+      { id: 'professional', name: '专业运动员' },
+      { id: 'amateur', name: '运动爱好者' },
+      { id: 'occasional', name: '偶尔运动' },
+      { id: 'sedentary', name: '久坐为主' }
     ],
+
+    // 运动爱好者可选运动列表（用于筛选）
+    sportsFilterOptions: [
+      { id: '滑雪', name: '滑雪' },
+      { id: '足球', name: '足球' },
+      { id: '篮球', name: '篮球' },
+      { id: '攀岩', name: '攀岩' },
+      { id: '跑步', name: '跑步' },
+      { id: '游泳', name: '游泳' },
+      { id: '骑行', name: '骑行' },
+      { id: '网球', name: '网球' }
+    ],
+
+    // 用户运动标签（从伤情简历同步）
+    userSportsTags: [],
+
+    // 选中的运动筛选
+    selectedSports: [],
     // 选中的筛选条件
     selectedPart: null, // 选中的损伤部位
     selectedPartDetail: null, // 选中的详细部位
     selectedInjuryType: null, // 选中的损伤类型
     selectedSportBackground: null, // 选中的运动背景
+    filterKeyword: '', // 关键词搜索
     hasActiveFilter: false, // 是否有激活的筛选
 
     // 动态列表
@@ -106,6 +126,7 @@ Page({
         injuryType: 'ACL断裂',
         injuryReason: '运动损伤',
         sportBackground: '运动爱好者',
+        sportsItems: ['足球', '篮球'],
         content: '术后60天，终于可以脱拐慢慢行走了！虽然还有点跛，但是每天都在进步💪 分享一下我的康复心得：坚持冰敷真的很重要！',
         images: [],
         tags: ['#ACL', '#术后60天', '#120°'],
@@ -130,6 +151,7 @@ Page({
         injuryType: '半月板撕裂',
         injuryReason: '运动损伤',
         sportBackground: '运动爱好者',
+        sportsItems: ['篮球'],
         content: '今天去复查，医生说恢复得不错！但是还说要继续加强股四头肌的力量训练，大家有什么好的建议吗？',
         images: [],
         tags: ['#半月板', '#术后30天', '#力量训练'],
@@ -153,6 +175,7 @@ Page({
         injuryType: '跟腱断裂',
         injuryReason: '运动损伤',
         sportBackground: '专业运动员',
+        sportsItems: [],
         content: '分享一下我的康复食谱：高蛋白、多维生素、适量碳水。康复期间营养跟上真的恢复更快！🥗',
         images: [],
         tags: ['#踝关节', '#术后90天', '#康复食谱'],
@@ -176,6 +199,7 @@ Page({
         injuryType: 'ACL断裂',
         injuryReason: '运动损伤',
         sportBackground: '运动爱好者',
+        sportsItems: ['篮球'],
         content: '今天第一次慢跑了！虽然只跑了500米就累了，但是太激动了！感谢这段时间一直坚持的自己！',
         images: [],
         tags: ['#ACL', '#术后120天', '#慢跑'],
@@ -201,6 +225,7 @@ Page({
         injuryType: 'ACL断裂',
         injuryReason: '意外事故',
         sportBackground: '久坐为主',
+        sportsItems: [],
         content: '刚刚做完手术第7天，腿还是肿的，心情有点低落...有没有同期的朋友交流一下？',
         images: [],
         tags: ['#ACL', '#术后7天', '#新手'],
@@ -235,6 +260,182 @@ Page({
     this.checkUserAuth();
     this.loadUserInfo();
     this.initDisplayPosts();
+    
+    // 云开发：获取帖子列表
+    this.loadPostsFromCloud();
+  },
+  
+  // ============ 云开发相关方法 ============
+  
+  // 从云端加载帖子列表
+  async loadPostsFromCloud() {
+    wx.showLoading({ title: '加载中...' });
+    
+    try {
+      const result = await cloud.getPosts();
+      
+      if (result.success && result.data) {
+        this.setData({
+          posts: result.data.posts || [],
+          displayPosts: result.data.posts || []
+        });
+      }
+    } catch (err) {
+      console.error('加载帖子失败:', err);
+      // 失败时使用本地数据（降级处理）
+      wx.showToast({
+        title: '加载失败，使用离线数据',
+        icon: 'none'
+      });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+  
+  // 云开发：发布帖子
+  async cloudCreatePost(postData) {
+    wx.showLoading({ title: '发布中...' });
+    
+    try {
+      const result = await cloud.createPost(postData);
+      
+      if (result.success) {
+        wx.showToast({ title: '发布成功' });
+        
+        // 将新帖子添加到列表顶部
+        const newPost = {
+          ...result.data,
+          id: result.data._id,
+          commentList: [],
+          showComments: false
+        };
+        
+        this.setData({
+          posts: [newPost, ...this.data.posts],
+          displayPosts: [newPost, ...this.data.displayPosts],
+          showPublishModal: false,
+          publishContent: '',
+          publishImages: []
+        });
+        
+        return true;
+      } else {
+        wx.showToast({ title: result.error || '发布失败', icon: 'none' });
+        return false;
+      }
+    } catch (err) {
+      console.error('发布帖子失败:', err);
+      wx.showToast({ title: '发布失败', icon: 'none' });
+      return false;
+    } finally {
+      wx.hideLoading();
+    }
+  },
+  
+  // 云开发：点赞/取消点赞
+  async cloudToggleLike(postId) {
+    try {
+      const result = await cloud.like({ action: 'toggle', postId });
+      
+      if (result.success) {
+        // 更新本地数据
+        const posts = this.data.posts.map(post => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              isLiked: result.data.isLiked,
+              likes: result.data.likes
+            };
+          }
+          return post;
+        });
+        
+        const displayPosts = this.data.displayPosts.map(post => {
+          if (post.id === postId) {
+            const updatedPost = posts.find(p => p.id === postId);
+            return { ...updatedPost, showComments: post.showComments };
+          }
+          return post;
+        });
+        
+        this.setData({ posts, displayPosts });
+      }
+    } catch (err) {
+      console.error('点赞失败:', err);
+      // 失败时回滚UI
+      this.toggleLikeRollback(postId);
+    }
+  },
+  
+  // 点赞失败时回滚
+  toggleLikeRollback(postId) {
+    const posts = this.data.posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          isLiked: !post.isLiked,
+          likes: post.isLiked ? post.likes - 1 : post.likes + 1
+        };
+      }
+      return post;
+    });
+    
+    const displayPosts = this.data.displayPosts.map(post => {
+      if (post.id === postId) {
+        const updatedPost = posts.find(p => p.id === postId);
+        return { ...updatedPost, showComments: post.showComments };
+      }
+      return post;
+    });
+    
+    this.setData({ posts, displayPosts });
+    wx.showToast({ title: '操作失败', icon: 'none' });
+  },
+  
+  // 云开发：发表评论
+  async cloudAddComment(postId, content) {
+    try {
+      const result = await cloud.comment({
+        action: 'add',
+        postId,
+        content,
+        authorName: this.data.userInfo.nickname || '匿名用户',
+        authorAvatar: this.data.userInfo.avatar || ''
+      });
+      
+      if (result.success) {
+        // 更新本地数据
+        const posts = this.data.posts.map(post => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              comments: post.comments + 1,
+              commentList: [...post.commentList, result.data]
+            };
+          }
+          return post;
+        });
+        
+        const displayPosts = this.data.displayPosts.map(post => {
+          if (post.id === postId) {
+            const updatedPost = posts.find(p => p.id === postId);
+            return updatedPost;
+          }
+          return post;
+        });
+        
+        this.setData({ posts, displayPosts });
+        wx.showToast({ title: '评论成功' });
+        return true;
+      } else {
+        wx.showToast({ title: result.error || '评论失败', icon: 'none' });
+        return false;
+      }
+    } catch (err) {
+      console.error('发表评论失败:', err);
+      wx.showToast({ title: '评论失败', icon: 'none' });
+      return false;
+    }
   },
 
   // 初始化显示帖子
@@ -271,6 +472,12 @@ Page({
       const today = new Date();
       const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
 
+      // 同步运动爱好者的具体运动标签
+      let userSportsTags = [];
+      if (userInfo.sportsBackground === '运动爱好者' && userInfo.sportsItems) {
+        userSportsTags = userInfo.sportsItems;
+      }
+
       this.setData({
         userInfo: {
           ...this.data.userInfo,
@@ -278,8 +485,11 @@ Page({
           injuryPart: userInfo.injuryPart || '膝关节',
           injuryType: userInfo.injuryType || 'ACL重建',
           avatar: userInfo.avatar || '',
-          nickname: userInfo.nickname || '康复勇士'
-        }
+          nickname: userInfo.nickname || '康复勇士',
+          sportsBackground: userInfo.sportsBackground || '',
+          sportsItems: userInfo.sportsItems || []
+        },
+        userSportsTags
       });
     }
   },
@@ -303,6 +513,11 @@ Page({
   // 阻止事件冒泡
   preventBubble() {
     // 空方法，用于阻止事件冒泡
+  },
+
+  // 页面滚动（scroll-view 需要）
+  onScroll(e) {
+    // 记录滚动位置等
   },
 
   // 选择损伤部位大类
@@ -375,55 +590,102 @@ Page({
     // 如果点击已选中的运动背景，则取消选择
     if (this.data.selectedSportBackground === bgId) {
       this.setData({
-        selectedSportBackground: null
+        selectedSportBackground: null,
+        selectedSports: []
       });
     } else {
       this.setData({
-        selectedSportBackground: bgId
+        selectedSportBackground: bgId,
+        selectedSports: []
       });
     }
   },
 
-  // 应用筛选
-  applyFilter() {
-    this.applyFilters();
-    this.setData({
-      showFilter: false
-    });
+  // 选择运动项目（多选）
+  toggleSportFilter(e) {
+    const sportId = e.currentTarget.dataset.id;
+    const selected = this.data.selectedSports;
+
+    // 复制当前列表
+    let newSelected = selected.slice();
+
+    // 查找索引
+    const idx = newSelected.indexOf(sportId);
+
+    // 切换状态
+    if (idx > -1) {
+      // 已选中，移除
+      newSelected.splice(idx, 1);
+    } else {
+      // 未选中，添加
+      newSelected.push(sportId);
+    }
+
+    this.setData({ selectedSports: newSelected });
   },
 
-  // 执行实际筛选逻辑
-  applyFilters() {
-    const { selectedPart, selectedPartDetail, selectedInjuryType, selectedSportBackground } = this.data;
+  // 运动爱好者选择具体运动
+  onSelectSport(e) {
+    const sportId = e.currentTarget.dataset.id;
+    const current = this.data.selectedSports || [];
+    let newSelected = [];
+
+    // 判断是否已选中
+    let isSelected = false;
+    for (let i = 0; i < current.length; i++) {
+      if (current[i] === sportId) {
+        isSelected = true;
+      } else {
+        newSelected.push(current[i]);
+      }
+    }
+
+    // 如果未选中则添加
+    if (!isSelected) {
+      newSelected.push(sportId);
+    }
+
+    this.setData({ selectedSports: newSelected });
+  },
+
+  // 应用筛选
+  applyFilter() {
+    const { selectedPart, selectedPartDetail, selectedInjuryType, selectedSportBackground, filterKeyword } = this.data;
 
     // 检查是否有激活的筛选
-    const hasActiveFilter = !!(selectedPart || selectedPartDetail || selectedInjuryType || selectedSportBackground);
-    this.setData({ hasActiveFilter });
+    const hasActiveFilter = !!(selectedPart || selectedPartDetail || selectedInjuryType || selectedSportBackground || this.data.selectedSports.length > 0 || filterKeyword);
 
     // 根据筛选条件过滤帖子
     let filteredPosts = this.data.posts;
 
+    // 关键词搜索：匹配损伤类型、损伤部位、帖子内容、标签
+    if (filterKeyword) {
+      const kw = filterKeyword.trim().toLowerCase();
+      filteredPosts = filteredPosts.filter(post => {
+        const matchType = post.injuryType && post.injuryType.toLowerCase().includes(kw);
+        const matchPart = post.injuryPart && post.injuryPart.toLowerCase().includes(kw);
+        const matchContent = post.content && post.content.toLowerCase().includes(kw);
+        const matchTags = post.tags && post.tags.some(tag => tag.toLowerCase().includes(kw));
+        return matchType || matchPart || matchContent || matchTags;
+      });
+    }
+
     if (selectedPartDetail && selectedInjuryType) {
-      // 三级筛选：部位 -> 详细部位 -> 损伤类型
       const part = this.data.filterTags.find(p => p.id === selectedPart);
       const detail = part ? part.children.find(d => d.id === selectedPartDetail) : null;
       const type = detail && detail.children ? detail.children.find(t => t.id === selectedInjuryType) : null;
-
       filteredPosts = filteredPosts.filter(post =>
         post.injuryPart === (detail ? detail.name : selectedPartDetail) &&
         post.injuryType === (type ? type.name : selectedInjuryType)
       );
     } else if (selectedPartDetail) {
-      // 二级筛选：部位 -> 详细部位
       const part = this.data.filterTags.find(p => p.id === selectedPart);
       const detail = part ? part.children.find(d => d.id === selectedPartDetail) : null;
       filteredPosts = filteredPosts.filter(post =>
         post.injuryPart === (detail ? detail.name : selectedPartDetail)
       );
     } else if (selectedPart) {
-      // 一级筛选：部位大类
       filteredPosts = filteredPosts.filter(post => {
-        // 根据大类匹配对应的部位
         const partMapping = {
           'lower_limb': ['膝关节', '踝关节', '髋关节'],
           'upper_limb': ['肩关节', '肘关节', '腕关节'],
@@ -438,10 +700,24 @@ Page({
       filteredPosts = filteredPosts.filter(post =>
         post.sportBackground === (bg ? bg.name : selectedSportBackground)
       );
+
+      // 如果选择了运动爱好者且有具体运动筛选
+      if (selectedSportBackground === 'amateur' && this.data.selectedSports.length > 0) {
+        filteredPosts = filteredPosts.filter(post => {
+          if (!post.sportsItems || post.sportsItems.length === 0) {
+            return false;
+          }
+          // 检查是否有交集（selectedSports 存的是运动名称）
+          return this.data.selectedSports.some(sportName => post.sportsItems.includes(sportName));
+        });
+      }
     }
 
+    // 合并所有 setData 为一次调用
     this.setData({
-      displayPosts: filteredPosts
+      hasActiveFilter,
+      displayPosts: filteredPosts,
+      showFilter: false
     });
   },
 
@@ -452,6 +728,8 @@ Page({
       selectedPartDetail: null,
       selectedInjuryType: null,
       selectedSportBackground: null,
+      selectedSports: [],
+      filterKeyword: '',
       detailOptions: [],
       injuryTypeOptions: [],
       hasActiveFilter: false,
@@ -459,11 +737,16 @@ Page({
     });
   },
 
+  // 关键词输入
+  onFilterKeywordInput(e) {
+    this.setData({ filterKeyword: e.detail.value });
+  },
+
   // 点赞
   toggleLike(e) {
     const postId = e.currentTarget.dataset.id;
-
-    // 更新 posts
+    
+    // 先乐观更新UI
     const posts = this.data.posts.map(post => {
       if (post.id === postId) {
         return {
@@ -475,7 +758,6 @@ Page({
       return post;
     });
 
-    // 更新 displayPosts（如果该 post 在筛选结果中）
     const displayPosts = this.data.displayPosts.map(post => {
       if (post.id === postId) {
         const updatedPost = posts.find(p => p.id === postId);
@@ -485,6 +767,9 @@ Page({
     });
 
     this.setData({ posts, displayPosts });
+    
+    // 调用云开发点赞
+    this.cloudToggleLike(postId);
   },
 
   // 评论 - 切换评论列表显示/隐藏
@@ -550,6 +835,7 @@ Page({
       return;
     }
 
+    // 乐观更新UI
     const posts = this.data.posts.map(post => {
       if (post.id === currentCommentPostId) {
         const newComment = {
@@ -578,10 +864,8 @@ Page({
 
     this.setData({ posts, displayPosts, showCommentInput: false, commentInput: '', currentCommentPostId: null });
 
-    wx.showToast({
-      title: '评论成功',
-      icon: 'success'
-    });
+    // 调用云开发发表评论
+    this.cloudAddComment(currentCommentPostId, commentInput.trim());
   },
 
   // 收藏
@@ -655,7 +939,7 @@ Page({
 
   // 发布动态
   publishPost() {
-    const { publishContent, publishImages, userInfo } = this.data;
+    const { publishContent, publishImages, userInfo, userSportsTags } = this.data;
 
     if (!publishContent.trim()) {
       wx.showToast({
@@ -673,38 +957,33 @@ Page({
     if (userInfo.daysSinceSurgery >= 90) {
       autoTags.push('#90天以上');
     }
+    // 添加运动爱好者的具体运动标签
+    if (userInfo.sportsBackground === '运动爱好者' && userSportsTags.length > 0) {
+      userSportsTags.forEach(sport => {
+        autoTags.push(`#${sport}`);
+      });
+    }
 
-    const newPost = {
-      id: Date.now(),
-      userId: 0,
-      userName: userInfo.nickname || '我',
-      userAvatar: userInfo.avatar || '',
+    const postData = {
+      content: publishContent,
+      images: publishImages,
+      authorName: userInfo.nickname || '我',
+      authorAvatar: userInfo.avatar || '',
       daysSinceSurgery: userInfo.daysSinceSurgery,
       injuryPart: userInfo.injuryPart,
       injuryType: userInfo.injuryType,
       injuryReason: userInfo.injuryCause || '',
       sportBackground: userInfo.sportsBackground || '',
-      content: publishContent,
-      images: publishImages,
-      tags: autoTags,
-      likes: 0,
-      comments: 0,
-      isLiked: false,
-      createTime: '刚刚',
-      commentList: [],
-      showComments: false
+      sportsItems: userInfo.sportsBackground === '运动爱好者' ? userSportsTags : [],
+      tags: autoTags
     };
 
-    const posts = [newPost, ...this.data.posts];
-    const displayPosts = [newPost, ...this.data.displayPosts];
-    this.setData({ posts, displayPosts });
-
-    wx.showToast({
-      title: '发布成功',
-      icon: 'success'
+    // 调用云开发发布帖子
+    this.cloudCreatePost(postData).then(success => {
+      if (success) {
+        this.closePublishModal();
+      }
     });
-
-    this.closePublishModal();
   },
 
   // 查看用户主页

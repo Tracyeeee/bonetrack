@@ -19,7 +19,13 @@ Page({
     selectedRecord: null,
     showRecordDetail: false,
     selectedTasks: [], // 选中日历的任务列表
-    
+    selectedAnglePhotos: [], // 选中的角度照片列表
+
+    // 照片预览相关
+    previewPhotoList: [],
+    currentPreviewIndex: 0,
+    showPhotoViewer: false,
+
     // 记录编辑相关
     isEditingRecord: false,
     editingAngle: '',
@@ -149,6 +155,7 @@ Page({
   },
 
   onShow() {
+    this.initUserInfo();
     this.loadRecords();
     this.generateCalendar();
   },
@@ -156,17 +163,20 @@ Page({
   // 初始化用户信息
   initUserInfo() {
     const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo && userInfo.surgeryDate) {
-      const surgeryDate = new Date(userInfo.surgeryDate);
+    if (userInfo && (userInfo.surgeryDate || userInfo.injuryDate)) {
+      const targetDate = userInfo.surgeryDate || userInfo.injuryDate;
+      const surgeryDate = new Date(targetDate + 'T00:00:00');
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
-      
+
       this.setData({
         userInfo: {
-          surgeryDate: userInfo.surgeryDate,
+          surgeryDate: userInfo.surgeryDate || userInfo.injuryDate,
           daysSinceSurgery: daysDiff
         }
       });
+      this.updateStats(this.data.records);
     }
   },
 
@@ -181,6 +191,9 @@ Page({
     const daysInMonth = lastDay.getDate();
     const startWeekDay = firstDay.getDay();
 
+    // 获取已删除的任务ID列表
+    const deletedTaskIds = wx.getStorageSync('deletedTaskIds') || [];
+
     // 添加空白（星期几的偏移）
     for (let i = 0; i < startWeekDay; i++) {
       days.push({ day: '', empty: true });
@@ -190,17 +203,29 @@ Page({
     const today = new Date();
     const todayStr = this.formatDate(today);
 
+    // 从全局任务列表获取任务数量（过滤已删除）
+    const globalTaskList = app.getTaskList();
+    const totalTasks = globalTaskList.filter(task => !deletedTaskIds.includes(task.id)).length;
+
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth - 1, day);
       const dateStr = this.formatDate(date);
       const record = this.data.records[dateStr];
-      
-      // 检查任务完成状态
+
+      // 检查任务完成状态（考虑已删除的任务）
       const tasksData = wx.getStorageSync(`tasks_${dateStr}`);
       let allTasksCompleted = false;
-      if (tasksData && tasksData.length > 0) {
-        allTasksCompleted = tasksData.every(task => task.completed);
+      if (tasksData && tasksData.length > 0 && totalTasks > 0) {
+        // 只计算未删除任务的完成情况
+        const completedTasks = tasksData.filter(task => !deletedTaskIds.includes(task.id) && task.completed).length;
+        allTasksCompleted = completedTasks === totalTasks;
       }
+
+      // 检查角度照片（包括 anglePhotos 和 photos）
+      const hasAnglePhoto = record && (
+        (record.anglePhotos && record.anglePhotos.length > 0) ||
+        (record.photos && record.photos.length > 0)
+      );
 
       days.push({
         day: day,
@@ -208,6 +233,7 @@ Page({
         isToday: dateStr === todayStr,
         hasRecord: !!record,
         hasPhoto: record && record.photos && record.photos.length > 0,
+        hasAnglePhoto: hasAnglePhoto,
         angle: record ? record.angle : '',
         tasks: record && record.tasks ? record.tasks : [],
         event: record && record.event ? this.truncateEvent(record.event) : '',
@@ -276,12 +302,12 @@ Page({
   updateStats(records) {
     const recordCount = Object.keys(records).length;
     const daysSinceSurgery = this.data.userInfo.daysSinceSurgery;
-    
+
     this.setData({
       stats: {
-        totalDays: daysSinceSurgery,
+        totalDays: daysSinceSurgery > 0 ? daysSinceSurgery : 0,
         checkedInDays: recordCount,
-        completionRate: Math.round((recordCount / daysSinceSurgery) * 100)
+        completionRate: daysSinceSurgery > 0 ? Math.round((recordCount / daysSinceSurgery) * 100) : 0
       }
     });
   },
@@ -323,26 +349,54 @@ Page({
 
     const record = this.data.records[date];
 
+    // 获取已删除的任务ID列表
+    const deletedTaskIds = wx.getStorageSync('deletedTaskIds') || [];
+
     // 加载当日任务数据
     const tasksData = wx.getStorageSync(`tasks_${date}`);
-    const defaultTasks = [
-      { id: 1, name: '直腿抬高', icon: '🦵', completed: false },
-      { id: 2, name: '踝泵运动', icon: '🦶', completed: false },
-      { id: 3, name: '股四头肌收缩', icon: '💪', completed: false },
-      { id: 4, name: '膝关节屈伸', icon: '🔄', completed: false },
-      { id: 5, name: '平衡垫站立', icon: '⚖️', completed: false }
-    ];
-    let selectedTasks = defaultTasks;
+    // 从全局任务列表获取任务，并过滤已删除的任务
+    const globalTaskList = app.getTaskList();
+    const defaultTasks = globalTaskList
+      .filter(task => !deletedTaskIds.includes(task.id))
+      .map(task => ({
+        id: task.id,
+        name: task.name,
+        category: task.category,
+        sets: task.sets,
+        reps: task.reps,
+        completed: false
+      }));
+
+    // 加载自定义任务
+    const customTasks = wx.getStorageSync('customTasks') || [];
+    const validCustomTasks = customTasks
+      .filter(task => !deletedTaskIds.includes(task.id) &&
+             task.startDate && task.endDate &&
+             task.startDate <= date && task.endDate >= date)
+      .map(task => ({
+        id: task.id,
+        name: task.name,
+        category: task.category,
+        sets: task.sets,
+        reps: task.reps,
+        completed: false
+      }));
+
+    let selectedTasks = [...defaultTasks, ...validCustomTasks];
     if (tasksData && tasksData.length > 0) {
-      selectedTasks = defaultTasks.map(task => {
+      selectedTasks = selectedTasks.map(task => {
         const saved = tasksData.find(s => s.id === task.id);
         return saved ? { ...task, completed: saved.completed } : task;
       });
     }
 
+    // 获取角度照片（兼容 anglePhotos 和 photos）
+    const anglePhotos = record ? (record.anglePhotos || record.photos || []) : [];
+
     this.setData({
       selectedDate: date,
       selectedRecord: record || null,
+      selectedAnglePhotos: anglePhotos,
       showRecordDetail: true,
       isEditingRecord: false,
       isAddingEvent: false,
@@ -364,6 +418,7 @@ Page({
     this.setData({
       selectedDate: null,
       selectedRecord: null,
+      selectedAnglePhotos: [],
       showRecordDetail: false,
       isEditingRecord: false,
       isAddingEvent: false,
@@ -373,7 +428,10 @@ Page({
       editingEvent: '',
       editingAngle: '',
       editingWeight: '',
-      selectedQuickTag: ''
+      selectedQuickTag: '',
+      showPhotoViewer: false,
+      previewPhotoList: [],
+      currentPreviewIndex: 0
     });
   },
 
@@ -619,5 +677,39 @@ Page({
     wx.switchTab({
       url: '/pages/index/index'
     });
+  },
+
+  // 预览角度照片
+  previewAnglePhoto(e) {
+    const photo = e.currentTarget.dataset.photo;
+    const photos = this.data.selectedAnglePhotos;
+    const index = photos.indexOf(photo);
+    
+    this.setData({
+      previewPhotoList: photos,
+      currentPreviewIndex: index >= 0 ? index : 0,
+      showPhotoViewer: true
+    });
+  },
+
+  // 照片轮播切换
+  onPhotoSwiperChange(e) {
+    this.setData({
+      currentPreviewIndex: e.detail.current
+    });
+  },
+
+  // 关闭照片查看器
+  closePhotoViewer() {
+    this.setData({
+      showPhotoViewer: false,
+      previewPhotoList: [],
+      currentPreviewIndex: 0
+    });
+  },
+
+  // 阻止触摸滑动穿透
+  preventTouchMove() {
+    // 空方法，用于阻止背景滚动穿透
   }
 });

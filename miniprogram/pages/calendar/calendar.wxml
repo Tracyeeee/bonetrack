@@ -67,8 +67,6 @@
             <!-- 任务完成标记 -->
             <view wx:if="{{item.tasks && item.tasks.length > 0 && !item.allTasksCompleted}}" class="mini-task-dot"></view>
           </view>
-          <!-- 有照片标记（优先级最高） -->
-          <view wx:if="{{item.hasPhoto}}" class="record-dot photo-dot"></view>
         </view>
       </view>
 
@@ -85,10 +83,6 @@
         <view class="legend-item">
           <view class="legend-dot angle-dot"></view>
           <text class="text-caption text-muted">有角度记录</text>
-        </view>
-        <view class="legend-item">
-          <view class="legend-dot photo-dot"></view>
-          <text class="text-caption text-muted">有照片</text>
         </view>
       </view>
     </view>
@@ -233,14 +227,31 @@
           <text class="section-label text-caption text-secondary">训练任务</text>
           <view class="tasks-list">
             <view class="task-item {{task.completed ? 'completed' : ''}}" wx:for="{{selectedTasks}}" wx:key="id">
-              <text class="task-icon">{{item.icon}}</text>
-              <text class="task-name">{{item.name}}</text>
               <text class="task-status {{task.completed ? 'done' : 'pending'}}">{{task.completed ? '✓' : '○'}}</text>
+              <text class="task-name">{{item.name}}</text>
             </view>
           </view>
         </view>
 
-        <!-- 照片预览 -->
+        <!-- 照片预览（包括 anglePhotos 和 photos） -->
+        <view class="photo-preview-section" wx:if="{{selectedAnglePhotos && selectedAnglePhotos.length > 0}}">
+          <text class="section-label text-caption text-secondary">角度照片</text>
+          <scroll-view class="photo-scroll" scroll-x="{{true}}">
+            <view class="photo-list">
+              <image
+                class="preview-photo"
+                wx:for="{{selectedAnglePhotos}}"
+                wx:key="index"
+                src="{{item}}"
+                mode="aspectFill"
+                data-photo="{{item}}"
+                bindtap="previewAnglePhoto"
+              ></image>
+            </view>
+          </scroll-view>
+        </view>
+
+        <!-- 打卡照片预览 -->
         <view class="photo-preview-section" wx:if="{{selectedRecord.photos && selectedRecord.photos.length > 0}}">
           <text class="section-label text-caption text-secondary">打卡照片</text>
           <scroll-view class="photo-scroll" scroll-x="{{true}}">
@@ -432,16 +443,15 @@
           <text class="section-label text-caption text-secondary">训练任务</text>
           <view class="tasks-list">
             <view class="task-item {{task.completed ? 'completed' : ''}}" wx:for="{{selectedTasks}}" wx:key="id">
-              <text class="task-icon">{{item.icon}}</text>
-              <text class="task-name">{{item.name}}</text>
               <text class="task-status {{task.completed ? 'done' : 'pending'}}">{{task.completed ? '✓' : '○'}}</text>
+              <text class="task-name">{{item.name}}</text>
             </view>
           </view>
         </view>
 
         <view class="quick-add-actions">
-          <button class="btn-primary mt-20" bindtap="goToCheckIn">
-            <text>去打卡</text>
+          <button class="btn-primary mt-20" bindtap="enterEditMode">
+            <text>补充打卡</text>
           </button>
           <button class="btn-secondary-outline mt-20" bindtap="enterAddEventMode">
             <text>添加事项</text>
@@ -459,6 +469,49 @@
           <button class="btn-primary mt-20" bindtap="enterAddEventMode">
             <text>添加事项</text>
           </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 照片查看器 -->
+  <view 
+    class="photo-viewer {{showPhotoViewer ? 'show' : ''}}" 
+    catchtouchmove="preventTouchMove"
+  >
+    <!-- 背景遮罩层 - 点击关闭 -->
+    <view class="photo-viewer-bg" bindtap="closePhotoViewer"></view>
+    
+    <!-- 内容区域 -->
+    <view class="photo-viewer-content">
+      <!-- 头部 -->
+      <view class="photo-viewer-header">
+        <text class="photo-viewer-title">角度照片 ({{currentPreviewIndex + 1}}/{{previewPhotoList.length}})</text>
+        <view class="photo-viewer-close" bindtap="closePhotoViewer">
+          <text>×</text>
+        </view>
+      </view>
+      
+      <!-- 照片轮播 -->
+      <swiper 
+        class="photo-swiper" 
+        current="{{currentPreviewIndex}}" 
+        bindchange="onPhotoSwiperChange"
+        indicator-dots="{{previewPhotoList.length > 1}}"
+        indicator-color="rgba(255,255,255,0.3)"
+        indicator-active-color="#FF4D00"
+      >
+        <swiper-item wx:for="{{previewPhotoList}}" wx:key="index">
+          <view class="photo-item-container" bindtap="closePhotoViewer">
+            <image class="photo-viewer-image" src="{{item}}" mode="aspectFit"></image>
+          </view>
+        </swiper-item>
+      </swiper>
+      
+      <!-- 底部关闭按钮 -->
+      <view class="photo-viewer-footer">
+        <view class="photo-viewer-cancel" bindtap="closePhotoViewer">
+          <text>关闭</text>
         </view>
       </view>
     </view>

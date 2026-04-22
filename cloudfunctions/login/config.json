@@ -1,0 +1,6 @@
+{
+  "permissions": {
+    "openapi": []
+  },
+  "desc": "用户登录/注册"
+}

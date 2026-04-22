@@ -5,21 +5,13 @@
   <view class="nav-bar" style="height: {{navBarHeight}};">
     <!-- 导航内容行 -->
     <view class="nav-content">
-      <view class="nav-left">
-        <view class="back-btn" bindtap="goBack">
-          <text>‹</text>
-        </view>
-        <text class="page-title">个人中心</text>
-      </view>
-      <view class="nav-right" bindtap="editProfile">
-        <text class="edit-btn">编辑</text>
-      </view>
+      <text class="page-title">个人中心</text>
     </view>
   </view>
 
   <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};">
     <!-- 用户信息卡片 -->
-    <view class="user-card card gradient-bg">
+    <view class="user-card card gradient-bg" bindtap="onAvatarCardTap">
       <view class="user-header">
         <view class="user-avatar-wrapper">
           <view class="avatar-container {{userInfo.isAuthorized ? 'glow' : ''}}">
@@ -34,24 +26,6 @@
             <text class="user-tag text-caption">{{userInfo.injuryType}}</text>
             <text class="user-tag text-caption text-orange">术后{{userInfo.daysSinceSurgery}}天</text>
           </view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 统计数据 -->
-    <view class="stats-section mt-30">
-      <view class="stats-grid">
-        <view class="stat-card card">
-          <text class="stat-value big-number">{{stats.checkInDays}}</text>
-          <text class="stat-label text-caption text-secondary mt-10">打卡天数</text>
-        </view>
-        <view class="stat-card card">
-          <text class="stat-value big-number">{{stats.totalPhotos}}</text>
-          <text class="stat-label text-caption text-secondary mt-10">记录照片</text>
-        </view>
-        <view class="stat-card card">
-          <text class="stat-value big-number">{{stats.consecutiveDays}}</text>
-          <text class="stat-label text-caption text-secondary mt-10">连续打卡</text>
         </view>
       </view>
     </view>
@@ -84,6 +58,24 @@
             </view>
           </view>
         </view>
+
+        <!-- 训练进度 -->
+        <view class="task-progress mt-30">
+          <view class="progress-header">
+            <text class="text-caption text-secondary">今日训练</text>
+          </view>
+          <view class="task-progress-row mt-20">
+            <view class="task-progress-item">
+              <view class="task-progress-circle">
+                <text class="task-progress-value">{{progress.todayCompletion}}</text>
+                <text class="task-progress-total">/{{progress.todayTotal}}</text>
+              </view>
+              <view class="task-progress-bar">
+                <view class="task-progress-fill" style="width: {{progress.todayTotal > 0 ? progress.todayCompletion / progress.todayTotal * 100 : 0}}%;"></view>
+              </view>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
 
@@ -113,4 +105,38 @@
       <text class="text-caption text-muted">Bonetrack 骨迹 v1.0.0</text>
     </view>
   </scroll-view>
+
+  <!-- 编辑昵称/头像弹窗 -->
+  <view class="edit-modal {{showEditModal ? 'show' : ''}}" catchtouchmove="preventTouchMove">
+    <view class="modal-mask" bindtap="closeEditModal"></view>
+    <view class="edit-content">
+      <view class="edit-header">
+        <text class="edit-cancel" bindtap="closeEditModal">取消</text>
+        <text class="edit-title">编辑资料</text>
+        <text class="edit-confirm" bindtap="confirmEdit">保存</text>
+      </view>
+
+      <!-- 头像编辑 -->
+      <view class="edit-avatar-section">
+        <view class="edit-avatar-wrapper" bindtap="chooseAvatar">
+          <image wx:if="{{editForm.avatar}}" class="edit-avatar-image" src="{{editForm.avatar}}" mode="aspectFill"></image>
+          <text wx:else class="edit-avatar-placeholder">👤</text>
+          <view class="edit-avatar-tip">点击更换头像</view>
+        </view>
+      </view>
+
+      <!-- 昵称编辑 -->
+      <view class="edit-field">
+        <text class="edit-label">昵称</text>
+        <input
+          class="edit-input"
+          type="text"
+          placeholder="请输入昵称"
+          value="{{editForm.nickname}}"
+          bindinput="onNicknameInput"
+          maxlength="20"
+        />
+      </view>
+    </view>
+  </view>
 </view>

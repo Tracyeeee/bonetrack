@@ -21,8 +21,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 30rpx;
-  height: 83rpx;
+  padding: 16rpx 30rpx;
+  height: 88rpx;
   box-sizing: border-box;
 }
 
@@ -232,6 +232,29 @@
 
 .task-status {
   font-size: 24rpx;
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.delete-btn {
+  width: 44rpx;
+  height: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 59, 48, 0.15);
+  border-radius: 50%;
+}
+
+.delete-icon {
+  font-size: 32rpx;
+  color: #FF3B30;
+  font-weight: 300;
+  line-height: 1;
 }
 
 /* 快速操作 */

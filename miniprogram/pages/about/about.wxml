@@ -1,0 +1,115 @@
+<!--pages/about/about.wxml-->
+<view class="page-container">
+  <!-- 顶部导航栏 -->
+  <view class="nav-bar" style="height: {{navBarHeight}};">
+    <view class="nav-content">
+      <view class="nav-left" bindtap="goBack">
+        <text class="back-btn">‹</text>
+      </view>
+      <text class="page-title">关于我们</text>
+      <view class="nav-right"></view>
+    </view>
+  </view>
+
+  <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};">
+
+    <!-- 核心功能介绍 -->
+    <view class="section-card mt-30">
+      <view class="section-header">
+        <text class="section-title text-h3">核心功能</text>
+      </view>
+
+      <view class="feature-list">
+        <view class="feature-item">
+          <view class="feature-icon">📅</view>
+          <view class="feature-content">
+            <text class="feature-name">智能日历</text>
+            <text class="feature-desc">可视化康复时间轴，记录每一天的进步</text>
+          </view>
+        </view>
+
+        <view class="feature-item">
+          <view class="feature-icon">📐</view>
+          <view class="feature-content">
+            <text class="feature-name">角度追踪</text>
+            <text class="feature-desc">精准记录弯腿角度，见证关节活动度提升</text>
+          </view>
+        </view>
+
+        <view class="feature-item">
+          <view class="feature-icon">📸</view>
+          <view class="feature-content">
+            <text class="feature-name">照片打卡</text>
+            <text class="feature-desc">记录康复过程，保留珍贵回忆</text>
+          </view>
+        </view>
+
+        <view class="feature-item">
+          <view class="feature-icon">🏋️</view>
+          <view class="feature-content">
+            <text class="feature-name">训练任务</text>
+            <text class="feature-desc">每日训练计划，告别遗忘，养成好习惯</text>
+          </view>
+        </view>
+
+        <view class="feature-item">
+          <view class="feature-icon">📊</view>
+          <view class="feature-content">
+            <text class="feature-name">数据统计</text>
+            <text class="feature-desc">打卡天数、连续记录、完成率一目了然</text>
+          </view>
+        </view>
+
+        <view class="feature-item">
+          <view class="feature-icon">💪</view>
+          <view class="feature-content">
+            <text class="feature-name">社区分享</text>
+            <text class="feature-desc">与同路人交流经验，互相鼓励共同康复</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 使用指南 -->
+    <view class="section-card mt-20">
+      <view class="section-header">
+        <text class="section-title text-h3">使用指南</text>
+      </view>
+
+      <view class="guide-list">
+        <view class="guide-item">
+          <text class="guide-num">1</text>
+          <view class="guide-content">
+            <text class="guide-title">完善伤情信息</text>
+            <text class="guide-desc">在"编辑伤情简历"中填写手术类型、部位和日期</text>
+          </view>
+        </view>
+
+        <view class="guide-item">
+          <text class="guide-num">2</text>
+          <view class="guide-content">
+            <text class="guide-title">每日打卡记录</text>
+            <text class="guide-desc">记录弯腿角度、负重量、训练完成情况和照片</text>
+          </view>
+        </view>
+
+        <view class="guide-item">
+          <text class="guide-num">3</text>
+          <view class="guide-content">
+            <text class="guide-title">查看康复进度</text>
+            <text class="guide-desc">在日历中回顾历史记录，感受每一天的进步</text>
+          </view>
+        </view>
+
+        <view class="guide-item">
+          <text class="guide-num">4</text>
+          <view class="guide-content">
+            <text class="guide-title">完成训练任务</text>
+            <text class="guide-desc">根据每日任务完成训练，获得成就徽章</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+  </scroll-view>
+</view>

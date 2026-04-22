@@ -32,7 +32,9 @@ Page({
       ],
       latestAngle: 120,
       targetAngle: 135,
-      targetDate: '2024-06-15'
+      targetDate: '2024-06-15',
+      todayCompletion: 0,
+      todayTotal: 5
     },
 
     // 成就徽章
@@ -51,7 +53,14 @@ Page({
       { id: 'reminder', name: '提醒设置', icon: '⏰', arrow: true },
       { id: 'about', name: '关于我们', icon: 'ℹ️', arrow: true },
       { id: 'feedback', name: '意见反馈', icon: '💬', arrow: true }
-    ]
+    ],
+
+    // 编辑弹窗
+    showEditModal: false,
+    editForm: {
+      nickname: '',
+      avatar: ''
+    }
   },
 
   onLoad() {
@@ -110,13 +119,31 @@ Page({
     let checkInDays = 0;
     let totalPhotos = 0;
     let consecutiveDays = 0;
-    
+    let todayCompletion = 0;
+
+    // 获取已删除的任务ID列表
+    const deletedTaskIds = wx.getStorageSync('deletedTaskIds') || [];
+
+    // 获取有效的任务总数（过滤已删除）
+    const globalTaskList = app.getTaskList();
+    const validTaskCount = globalTaskList.filter(task => !deletedTaskIds.includes(task.id)).length;
+
+    // 获取有效的自定义任务数
+    const customTasks = wx.getStorageSync('customTasks') || [];
+    const today = this.formatDate(new Date());
+    const validCustomTasks = customTasks.filter(task =>
+      !deletedTaskIds.includes(task.id) &&
+      task.startDate && task.endDate &&
+      task.startDate <= today && task.endDate >= today
+    );
+    const todayTotal = validTaskCount + validCustomTasks.length;
+
     for (let i = 0; i < 90; i++) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = this.formatDate(date);
       const record = wx.getStorageSync(`checkin_${dateStr}`);
-      
+
       if (record) {
         checkInDays++;
         if (record.photos) {
@@ -128,6 +155,14 @@ Page({
       } else if (i > 0) {
         consecutiveDays = 0;
       }
+
+      // 计算今日完成数（过滤已删除的任务）
+      if (i === 0) {
+        const tasks = wx.getStorageSync(`tasks_${dateStr}`);
+        if (tasks && tasks.length > 0) {
+          todayCompletion = tasks.filter(t => !deletedTaskIds.includes(t.id) && t.completed).length;
+        }
+      }
     }
 
     this.setData({
@@ -136,7 +171,9 @@ Page({
         checkInDays,
         totalPhotos,
         consecutiveDays
-      }
+      },
+      'progress.todayCompletion': todayCompletion,
+      'progress.todayTotal': todayTotal
     });
   },
 
@@ -183,6 +220,15 @@ Page({
       placeholderText: '输入每日提醒时间（如：20:00）',
       success: (res) => {
         if (res.confirm && res.content) {
+          // 验证时间格式
+          const timeRegex = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/;
+          if (!timeRegex.test(res.content)) {
+            wx.showToast({
+              title: '请输入正确格式（如20:00）',
+              icon: 'none'
+            });
+            return;
+          }
           // 保存提醒时间
           wx.setStorageSync('reminderTime', res.content);
           wx.showToast({
@@ -196,11 +242,8 @@ Page({
 
   // 关于我们
   showAbout() {
-    wx.showModal({
-      title: '关于 Bonetrack 骨迹',
-      content: '版本：1.0.0\n\n一款专为术后及运动损伤人群设计的沉浸式康复管理工具。\n\n通过结构化记录、可视化时间轴、五大核心模块及强力监督机制，将枯燥的康复过程数据化、游戏化。',
-      showCancel: false,
-      confirmText: '知道了'
+    wx.navigateTo({
+      url: '/pages/about/about'
     });
   },
 
@@ -243,5 +286,81 @@ Page({
     wx.switchTab({
       url: '/pages/index/index'
     });
-  }
+  },
+
+  // 点击头像卡片
+  onAvatarCardTap() {
+    this.setData({
+      showEditModal: true,
+      editForm: {
+        nickname: this.data.userInfo.nickname,
+        avatar: this.data.userInfo.avatar
+      }
+    });
+  },
+
+  // 关闭编辑弹窗
+  closeEditModal() {
+    this.setData({
+      showEditModal: false
+    });
+  },
+
+  // 昵称输入
+  onNicknameInput(e) {
+    this.setData({
+      'editForm.nickname': e.detail.value
+    });
+  },
+
+  // 选择头像
+  chooseAvatar() {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const tempFilePath = res.tempFilePaths[0];
+        this.setData({
+          'editForm.avatar': tempFilePath
+        });
+      }
+    });
+  },
+
+  // 确认编辑
+  confirmEdit() {
+    const { nickname, avatar } = this.data.editForm;
+
+    if (!nickname || nickname.trim() === '') {
+      wx.showToast({
+        title: '请输入昵称',
+        icon: 'none'
+      });
+      return;
+    }
+
+    // 保存到本地存储
+    const userInfo = wx.getStorageSync('userInfo') || {};
+    userInfo.nickname = nickname.trim();
+    if (avatar) {
+      userInfo.avatar = avatar;
+    }
+    wx.setStorageSync('userInfo', userInfo);
+
+    // 更新页面数据
+    this.setData({
+      'userInfo.nickname': nickname.trim(),
+      'userInfo.avatar': avatar || this.data.userInfo.avatar,
+      showEditModal: false
+    });
+
+    wx.showToast({
+      title: '修改成功',
+      icon: 'success'
+    });
+  },
+
+  // 阻止触摸穿透
+  preventTouchMove() {}
 });

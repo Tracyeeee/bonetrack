@@ -152,10 +152,10 @@ Page({
 
     // 运动背景选项
     sportsBackgrounds: [
-      { id: 'professional', name: '专业运动员', icon: '🏆' },
-      { id: 'amateur', name: '运动爱好者', icon: '⚽' },
-      { id: 'occasional', name: '偶尔运动', icon: '🚶' },
-      { id: 'sedentary', name: '久坐为主', icon: '🧘' }
+      { id: 'professional', name: '专业运动员' },
+      { id: 'amateur', name: '运动爱好者' },
+      { id: 'occasional', name: '偶尔运动' },
+      { id: 'sedentary', name: '久坐为主' }
     ],
 
     // 日期相关

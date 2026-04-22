@@ -200,7 +200,7 @@ Page({
   },
 
   // 快速选择负重
-  selectWeight(e) {
+  quickSelectWeight(e) {
     const weight = e.currentTarget.dataset.weight;
     this.setData({ weight });
     this.saveRecord();

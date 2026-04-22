@@ -398,7 +398,6 @@ module.exports = {
           data-id="{{item.id}}"
           bindtap="selectBackground"
         >
-          <text class="background-icon">{{item.icon}}</text>
           <text class="background-name text-caption">{{item.name}}</text>
         </view>
       </view>

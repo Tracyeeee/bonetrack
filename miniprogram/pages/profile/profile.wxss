@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 30rpx 20rpx;
+  padding: 16rpx 30rpx 20rpx;
   box-sizing: border-box;
   min-height: 88rpx;
 }
@@ -361,11 +361,6 @@
   background-color: rgba(255, 77, 0, 0.1);
 }
 
-.background-icon {
-  font-size: 50rpx;
-  margin-bottom: 12rpx;
-}
-
 .background-name {
   font-size: 26rpx;
   color: var(--text-secondary);
@@ -682,7 +677,7 @@
   align-items: center;
   justify-content: space-between;
   height: 88rpx;
-  padding: 60rpx 30rpx 40rpx;
+  padding: 160rpx 30rpx 40rpx;
   background-color: #0A0A0A;
   position: relative;
 }

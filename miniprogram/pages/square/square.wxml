@@ -1,3 +1,14 @@
+<wxs module="utils">
+module.exports = {
+  isSelected: function(arr, item) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i] === item) return true;
+    }
+    return false;
+  }
+}
+</wxs>
+
 <!--pages/square/square.wxml-->
 <view class="page-container">
   <!-- 顶部导航栏 - 动态高度 -->
@@ -7,21 +18,40 @@
       <text class="page-title">伤友广场</text>
       <!-- 筛选按钮 -->
       <view class="filter-btn {{hasActiveFilter ? 'active' : ''}}" bindtap="toggleFilter">
-        <text class="filter-icon">{{hasActiveFilter ? '🎯' : '🔍'}}</text>
         <text class="filter-text text-caption">{{hasActiveFilter ? '筛选中' : '筛选'}}</text>
       </view>
     </view>
   </view>
 
   <!-- 筛选面板 -->
-  <view class="filter-panel {{showFilter ? 'show' : ''}}" catchtap="closeFilter">
-    <view class="filter-content" catchtap="preventBubble">
+  <view class="filter-panel {{showFilter ? 'show' : ''}}" bindtap="closeFilter">
+    <view class="filter-content" catchtap>
       <view class="filter-header">
         <text class="filter-title text-h3">筛选</text>
         <view class="filter-close" bindtap="closeFilter">×</view>
       </view>
 
-      <scroll-view class="filter-scroll" scroll-y="{{true}}">
+      <view class="filter-scroll">
+        <!-- 关键词搜索 -->
+        <view class="filter-section">
+          <view class="filter-section-title">
+            <text class="text-body text-secondary">关键词搜索</text>
+          </view>
+          <view class="filter-search-wrap">
+            <input
+              class="filter-search-input"
+              placeholder="如：胫骨平台骨折、半月板撕裂"
+              placeholder-class="filter-search-placeholder"
+              value="{{filterKeyword}}"
+              bindinput="onFilterKeywordInput"
+            />
+            <text class="filter-search-icon">🔍</text>
+          </view>
+          <view class="filter-keyword-hint" wx:if="{{filterKeyword}}">
+            <text class="text-caption text-muted">点击"应用筛选"搜索包含「{{filterKeyword}}」的帖子</text>
+          </view>
+        </view>
+
         <!-- 损伤部位 -->
         <view class="filter-section">
           <view class="filter-section-title">
@@ -84,11 +114,24 @@
               data-id="{{item.id}}"
               bindtap="selectSportBgFilter"
             >
-              {{item.icon}} {{item.name}}
+              {{item.name}}
+            </view>
+          </view>
+
+          <!-- 运动爱好者子选项 -->
+          <view class="filter-tags-row sub-tags" wx:if="{{selectedSportBackground === 'amateur'}}">
+            <view
+              wx:for="{{sportsFilterOptions}}"
+              wx:key="id"
+              class="filter-tag small {{utils.isSelected(selectedSports, item.id) ? 'selected' : ''}}"
+              data-id="{{item.id}}"
+              catchtap="onSelectSport"
+            >
+              {{item.name}}
             </view>
           </view>
         </view>
-      </scroll-view>
+      </view>
 
       <!-- 筛选操作按钮 -->
       <view class="filter-actions">
@@ -102,7 +145,7 @@
     </view>
   </view>
 
-  <scroll-view class="content" scroll-y="{{true}}" style="margin-top: {{navBarHeight}};" catchtouchmove="preventBubble">
+  <scroll-view class="content" scroll-y="{{true}}" style="height: 100vh;" bindscroll="onScroll">
     <!-- 筛选结果为空提示 -->
     <view class="empty-filter-result" wx:if="{{displayPosts.length === 0 && hasActiveFilter}}">
       <text class="empty-icon">🔍</text>
@@ -129,6 +172,7 @@
                 <text class="user-tag text-caption">{{item.injuryType}}</text>
                 <text class="user-tag text-caption text-blue">{{item.injuryReason}}</text>
                 <text class="user-tag text-caption text-purple">{{item.sportBackground}}</text>
+                <text class="user-tag text-caption text-green" wx:for="{{item.sportsItems}}" wx:for-item="sportItem" wx:key="index">{{sportItem}}</text>
                 <text class="user-tag text-caption text-orange">术后{{item.daysSinceSurgery}}天</text>
               </view>
             </view>
@@ -249,16 +293,18 @@
   </view>
 
   <!-- 评论输入框弹窗 -->
-  <view class="comment-modal {{showCommentInput ? 'show' : ''}}" catchtap="closeCommentInput">
+  <view wx:if="{{showCommentInput}}" class="comment-modal show" catchtap="closeCommentInput">
     <view class="comment-input-container" catchtap="preventBubble">
       <input
         class="comment-input"
-        placeholder="写下你的评论..."
+        placeholder="写下评论..."
+        placeholder-class="comment-placeholder"
         value="{{commentInput}}"
         bindinput="inputComment"
         confirm-type="send"
         bindconfirm="sendComment"
         focus="{{showCommentInput}}"
+        adjust-position="{{true}}"
       />
       <view class="comment-send-btn {{commentInput ? 'active' : ''}}" bindtap="sendComment">
         <text>发送</text>

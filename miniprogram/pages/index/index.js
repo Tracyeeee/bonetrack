@@ -16,13 +16,7 @@ Page({
     checkInStatus: {
       hasCheckedIn: false,
       checkedInTasks: ['拍照', '角度记录'],
-      todayTasks: [
-        { id: 1, name: '直腿抬高', category: 'strength', completed: false, sets: 3, reps: 10, icon: '🦵' },
-        { id: 2, name: '踝泵运动', category: 'range', completed: false, sets: 3, reps: 20, icon: '🦶' },
-        { id: 3, name: '股四头肌收缩', category: 'strength', completed: false, sets: 3, reps: 15, icon: '💪' },
-        { id: 4, name: '膝关节屈伸', category: 'range', completed: false, sets: 3, reps: 15, icon: '🔄' },
-        { id: 5, name: '平衡垫站立', category: 'balance', completed: false, sets: 3, reps: '1分钟', icon: '⚖️' }
-      ]
+      todayTasks: [] // 将在 onLoad 中从全局任务列表同步
     },
 
     // 统计数据
@@ -60,6 +54,35 @@ Page({
     this.checkTodayStatus();
     this.loadCheckInStatus();
     this.calculateScrollHeight();
+    // 同步全局任务列表
+    this.syncTaskList();
+  },
+
+  // 同步全局任务列表到首页
+  syncTaskList() {
+    const globalTaskList = app.getTaskList();
+    // 获取用户删除的任务列表
+    const deletedTaskIds = wx.getStorageSync('deletedTaskIds') || [];
+
+    const todayTasks = globalTaskList
+      .filter(task => !deletedTaskIds.includes(task.id)) // 排除已删除的任务
+      .map(task => ({
+        ...task,
+        completed: false
+      }));
+
+    // 合并自定义任务
+    const customTasks = wx.getStorageSync('customTasks') || [];
+    const today = this.formatDate(new Date());
+    const validCustomTasks = customTasks.filter(task => {
+      return task.startDate && task.endDate &&
+             task.startDate <= today && task.endDate >= today &&
+             !deletedTaskIds.includes(task.id);
+    });
+
+    this.setData({
+      'checkInStatus.todayTasks': [...todayTasks, ...validCustomTasks]
+    });
   },
 
   // 计算滚动区域高度
@@ -180,6 +203,9 @@ Page({
     if (photo) {
       record.anglePhotos = record.anglePhotos || [];
       record.anglePhotos.push(photo);
+      // 同时添加到 photos 数组，保持兼容性
+      record.photos = record.photos || [];
+      record.photos.push(photo);
     }
     record.updatedAt = Date.now();
 
@@ -242,6 +268,7 @@ Page({
 
   onShow() {
     // 页面显示时刷新数据
+    this.loadUserInfo();
     this.loadCheckInStatus();
     this.updateStats();
   },
@@ -372,6 +399,7 @@ Page({
   loadCheckInStatus() {
     const today = this.formatDate(new Date());
     const record = wx.getStorageSync(`checkin_${today}`);
+    const deletedTaskIds = wx.getStorageSync('deletedTaskIds') || [];
 
     // 从任务存储中加载今日任务（与任务页面保持一致）
     const todayTasksData = wx.getStorageSync(`tasks_${today}`);
@@ -381,7 +409,7 @@ Page({
       { id: 3, name: '股四头肌收缩', category: 'strength', completed: false, sets: 3, reps: 15, icon: '💪' },
       { id: 4, name: '膝关节屈伸', category: 'range', completed: false, sets: 3, reps: 15, icon: '🔄' },
       { id: 5, name: '平衡垫站立', category: 'balance', completed: false, sets: 3, reps: '1分钟', icon: '⚖️' }
-    ];
+    ].filter(task => !deletedTaskIds.includes(task.id));
 
     // 加载已保存的任务完成状态
     if (todayTasksData && todayTasksData.length > 0) {
@@ -395,7 +423,8 @@ Page({
     const customTasks = wx.getStorageSync('customTasks') || [];
     const validCustomTasks = customTasks.filter(task => {
       return task.startDate && task.endDate &&
-             task.startDate <= today && task.endDate >= today;
+             task.startDate <= today && task.endDate >= today &&
+             !deletedTaskIds.includes(task.id);
     });
 
     // 合并已保存的自定义任务状态
@@ -427,13 +456,6 @@ Page({
   goToCheckIn() {
     wx.navigateTo({
       url: '/pages/checkin/checkin'
-    });
-  },
-
-  // 跳转到任务页面
-  goToTasks() {
-    wx.switchTab({
-      url: '/pages/tasks/tasks'
     });
   },
 
@@ -562,6 +584,47 @@ Page({
     this.saveCustomTasks();
 
     wx.showToast({ title: '任务添加成功', icon: 'success' });
+  },
+
+  // 删除任务
+  deleteTask(e) {
+    const taskId = e.currentTarget.dataset.taskId;
+    const tasks = this.data.checkInStatus.todayTasks;
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+
+    if (taskIndex > -1) {
+      // 保存要删除的任务信息（在 splice 之前）
+      const taskToDelete = tasks[taskIndex];
+
+      wx.showModal({
+        title: '删除任务',
+        content: '确定要删除这个任务吗？',
+        success: (res) => {
+          if (res.confirm) {
+            tasks.splice(taskIndex, 1);
+            this.setData({
+              'checkInStatus.todayTasks': tasks
+            });
+
+            // 保存删除的任务ID到本地存储
+            let deletedTaskIds = wx.getStorageSync('deletedTaskIds') || [];
+            if (!deletedTaskIds.includes(taskId)) {
+              deletedTaskIds.push(taskId);
+              wx.setStorageSync('deletedTaskIds', deletedTaskIds);
+            }
+
+            // 如果是自定义任务，也从 customTasks 中删除
+            if (taskToDelete && taskToDelete.category === 'custom') {
+              let customTasks = wx.getStorageSync('customTasks') || [];
+              customTasks = customTasks.filter(t => t.id !== taskId);
+              wx.setStorageSync('customTasks', customTasks);
+            }
+
+            wx.showToast({ title: '任务已删除', icon: 'success' });
+          }
+        }
+      });
+    }
   },
 
   // 保存自定义任务到本地存储

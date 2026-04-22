@@ -1,11 +1,12 @@
 {
   "pages": [
-    "pages/profile/profile",
     "pages/index/index",
     "pages/calendar/calendar",
     "pages/square/square",
+    "pages/user/user",
+    "pages/profile/profile",
     "pages/checkin/checkin",
-    "pages/user/user"
+    "pages/about/about"
   ],
   "window": {
     "backgroundColor": "#0A0A0A",

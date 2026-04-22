@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 30rpx;
+  padding: 16rpx 30rpx;
   height: 88rpx;
   box-sizing: border-box;
 }
@@ -175,9 +175,9 @@
 /* 记录标记点 */
 .record-dot {
   position: absolute;
-  bottom: 6rpx;
-  width: 10rpx;
-  height: 10rpx;
+  bottom: 8rpx;
+  width: 14rpx;
+  height: 14rpx;
   border-radius: 50%;
   background-color: var(--primary-color);
 }
@@ -201,24 +201,24 @@
 /* 记录标记容器 */
 .record-marks {
   position: absolute;
-  bottom: 4rpx;
+  bottom: 6rpx;
   left: 4rpx;
   right: 4rpx;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4rpx;
+  gap: 6rpx;
   justify-content: center;
 }
 
 /* 迷你角度标签 */
 .mini-angle-tag {
-  font-size: 14rpx;
+  font-size: 16rpx;
   color: var(--text-primary);
   font-weight: 600;
   background-color: rgba(255, 77, 0, 0.85);
-  padding: 1rpx 4rpx;
-  border-radius: 4rpx;
+  padding: 3rpx 8rpx;
+  border-radius: 6rpx;
   line-height: 1.3;
   max-width: 90%;
   overflow: hidden;
@@ -227,20 +227,20 @@
 }
 
 .mini-task-dot {
-  width: 8rpx;
-  height: 8rpx;
+  width: 12rpx;
+  height: 12rpx;
   border-radius: 50%;
   background-color: #4CD964;
 }
 
 /* 迷你事项标签 */
 .mini-event-tag {
-  font-size: 12rpx;
+  font-size: 14rpx;
   color: #FFFFFF;
   font-weight: 600;
   background-color: #5856D6;
-  padding: 1rpx 4rpx;
-  border-radius: 4rpx;
+  padding: 3rpx 8rpx;
+  border-radius: 6rpx;
   line-height: 1.3;
   max-width: 90%;
   overflow: hidden;
@@ -250,12 +250,12 @@
 
 /* 完成训练标签 */
 .mini-completed-tag {
-  font-size: 12rpx;
+  font-size: 14rpx;
   color: #FFFFFF;
   font-weight: 600;
   background-color: #007AFF;
-  padding: 1rpx 4rpx;
-  border-radius: 4rpx;
+  padding: 3rpx 8rpx;
+  border-radius: 6rpx;
   line-height: 1.3;
   max-width: 90%;
   overflow: hidden;
@@ -266,9 +266,9 @@
 /* 照片标记点 */
 .photo-dot {
   position: absolute;
-  bottom: 6rpx;
-  width: 10rpx;
-  height: 10rpx;
+  bottom: 8rpx;
+  width: 14rpx;
+  height: 14rpx;
   border-radius: 50%;
   background-color: #4CD964;
 }
@@ -1037,5 +1037,118 @@
 
 .detail-actions .btn-primary {
   background-color: var(--primary-color);
+  color: #FFFFFF;
+}
+
+/* 角度照片标签 */
+.mini-photo-tag {
+  font-size: 16rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+  background-color: #FF9500;
+  padding: 3rpx 8rpx;
+  border-radius: 6rpx;
+  line-height: 1.3;
+}
+
+/* 照片查看器 */
+.photo-viewer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.photo-viewer.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.photo-viewer-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.photo-viewer-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.photo-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40rpx 30rpx;
+  padding-top: calc(40rpx + env(safe-area-inset-top));
+  background-color: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.photo-viewer-title {
+  font-size: 32rpx;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.photo-viewer-close {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  margin-top: 60rpx;
+}
+
+.photo-swiper {
+  flex: 1;
+  width: 100%;
+  background-color: #000;
+}
+
+.photo-item-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-viewer-image {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-viewer-footer {
+  padding: 30rpx;
+  padding-bottom: calc(30rpx + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.photo-viewer-cancel {
+  padding: 20rpx 60rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 40rpx;
+  font-size: 28rpx;
   color: #FFFFFF;
 }
