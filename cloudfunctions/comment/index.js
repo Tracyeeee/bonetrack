@@ -208,16 +208,17 @@ async function deleteComment(openId, event) {
   
   try {
     // 查询评论是否存在且属于当前用户
-    const { data: comments } = await commentsCollection.doc(commentId).get();
+    const commentResult = await commentsCollection.doc(commentId).get();
+    const comment = commentResult.data;
     
-    if (!comments) {
+    if (!comment) {
       return {
         success: false,
         error: '评论不存在'
       };
     }
     
-    if (comments.authorId !== openId) {
+    if (comment.authorId !== openId) {
       return {
         success: false,
         error: '只能删除自己的评论'

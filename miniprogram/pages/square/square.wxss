@@ -112,6 +112,23 @@
   margin-bottom: 20rpx;
 }
 
+.post-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.post-delete {
+  font-size: 24rpx;
+  color: var(--text-muted);
+  margin-top: 8rpx;
+  padding: 4rpx 8rpx;
+}
+
+.post-delete:active {
+  color: #ff4d4f;
+}
+
 .user-info {
   display: flex;
   align-items: center;

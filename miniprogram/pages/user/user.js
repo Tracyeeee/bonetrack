@@ -49,10 +49,10 @@ Page({
 
     // 菜单项
     menuItems: [
-      { id: 'profile', name: '编辑伤情简历', icon: '📝', arrow: true },
-      { id: 'reminder', name: '提醒设置', icon: '⏰', arrow: true },
-      { id: 'about', name: '关于我们', icon: 'ℹ️', arrow: true },
-      { id: 'feedback', name: '意见反馈', icon: '💬', arrow: true }
+      { id: 'profile', name: '编辑伤情简历', arrow: true },
+      { id: 'reminder', name: '提醒设置', arrow: true },
+      { id: 'about', name: '关于我们', arrow: true },
+      { id: 'feedback', name: '意见反馈', arrow: true }
     ],
 
     // 编辑弹窗

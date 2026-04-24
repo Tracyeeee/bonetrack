@@ -4,6 +4,9 @@ const cloud = require('../../utils/cloud.js');
 
 Page({
   data: {
+    // 当前用户ID
+    currentUserId: '',
+
     // 用户信息
     userInfo: {
       daysSinceSurgery: 45,
@@ -115,131 +118,7 @@ Page({
     hasActiveFilter: false, // 是否有激活的筛选
 
     // 动态列表
-    posts: [
-      {
-        id: 1,
-        userId: 101,
-        userName: '康复小明',
-        userAvatar: '',
-        daysSinceSurgery: 60,
-        injuryPart: '膝关节',
-        injuryType: 'ACL断裂',
-        injuryReason: '运动损伤',
-        sportBackground: '运动爱好者',
-        sportsItems: ['足球', '篮球'],
-        content: '术后60天，终于可以脱拐慢慢行走了！虽然还有点跛，但是每天都在进步💪 分享一下我的康复心得：坚持冰敷真的很重要！',
-        images: [],
-        tags: ['#ACL', '#术后60天', '#120°'],
-        likes: 128,
-        comments: 3,
-        isLiked: false,
-        createTime: '2小时前',
-        commentList: [
-          { id: 1, userName: '膝盖侠', content: '恭喜！脱拐是大进步，继续加油💪', createTime: '1小时前' },
-          { id: 2, userName: '康复小白', content: '我还在拄拐阶段，好羡慕啊', createTime: '30分钟前' },
-          { id: 3, userName: '钢铁战士', content: '冰敷确实重要，每天坚持效果看得见', createTime: '10分钟前' }
-        ],
-        showComments: false
-      },
-      {
-        id: 2,
-        userId: 102,
-        userName: '膝盖侠',
-        userAvatar: '',
-        daysSinceSurgery: 30,
-        injuryPart: '膝关节',
-        injuryType: '半月板撕裂',
-        injuryReason: '运动损伤',
-        sportBackground: '运动爱好者',
-        sportsItems: ['篮球'],
-        content: '今天去复查，医生说恢复得不错！但是还说要继续加强股四头肌的力量训练，大家有什么好的建议吗？',
-        images: [],
-        tags: ['#半月板', '#术后30天', '#力量训练'],
-        likes: 45,
-        comments: 2,
-        isLiked: true,
-        createTime: '4小时前',
-        commentList: [
-          { id: 1, userName: '康复小明', content: '直腿抬高真的很有用！每天做3组，每组15次', createTime: '3小时前' },
-          { id: 2, userName: 'Lisa', content: '推荐做靠墙静蹲，慢慢增加角度', createTime: '2小时前' }
-        ],
-        showComments: false
-      },
-      {
-        id: 3,
-        userId: 103,
-        userName: '运动康复Lisa',
-        userAvatar: '',
-        daysSinceSurgery: 90,
-        injuryPart: '踝关节',
-        injuryType: '跟腱断裂',
-        injuryReason: '运动损伤',
-        sportBackground: '专业运动员',
-        sportsItems: [],
-        content: '分享一下我的康复食谱：高蛋白、多维生素、适量碳水。康复期间营养跟上真的恢复更快！🥗',
-        images: [],
-        tags: ['#踝关节', '#术后90天', '#康复食谱'],
-        likes: 234,
-        comments: 2,
-        isLiked: false,
-        createTime: '昨天',
-        commentList: [
-          { id: 1, userName: '健身达人', content: '食谱很科学，收藏了！', createTime: '12小时前' },
-          { id: 2, userName: '吃货康复', content: '蛋白质具体吃多少克呀？', createTime: '6小时前' }
-        ],
-        showComments: false
-      },
-      {
-        id: 4,
-        userId: 104,
-        userName: '钢铁战士',
-        userAvatar: '',
-        daysSinceSurgery: 120,
-        injuryPart: '膝关节',
-        injuryType: 'ACL断裂',
-        injuryReason: '运动损伤',
-        sportBackground: '运动爱好者',
-        sportsItems: ['篮球'],
-        content: '今天第一次慢跑了！虽然只跑了500米就累了，但是太激动了！感谢这段时间一直坚持的自己！',
-        images: [],
-        tags: ['#ACL', '#术后120天', '#慢跑'],
-        likes: 567,
-        comments: 4,
-        isLiked: false,
-        createTime: '2天前',
-        commentList: [
-          { id: 1, userName: '康复小明', content: '太棒了！我90天才能慢跑，你恢复得好快', createTime: '2天前' },
-          { id: 2, userName: '运动康复Lisa', content: '500米是个好的开始，加油！', createTime: '1天前' },
-          { id: 3, userName: '康复小白', content: '这就是我坚持下去的动力！', createTime: '1天前' },
-          { id: 4, userName: '膝盖侠', content: '等能踢球了叫上我', createTime: '12小时前' }
-        ],
-        showComments: false
-      },
-      {
-        id: 5,
-        userId: 105,
-        userName: '康复小白',
-        userAvatar: '',
-        daysSinceSurgery: 7,
-        injuryPart: '膝关节',
-        injuryType: 'ACL断裂',
-        injuryReason: '意外事故',
-        sportBackground: '久坐为主',
-        sportsItems: [],
-        content: '刚刚做完手术第7天，腿还是肿的，心情有点低落...有没有同期的朋友交流一下？',
-        images: [],
-        tags: ['#ACL', '#术后7天', '#新手'],
-        likes: 89,
-        comments: 2,
-        isLiked: false,
-        createTime: '3天前',
-        commentList: [
-          { id: 1, userName: '康复小明', content: '刚做完都这样，别担心，坚持康复训练会好起来的', createTime: '3天前' },
-          { id: 2, userName: '膝盖侠', content: '加油！术后第一周最难熬过去了就轻松多了', createTime: '2天前' }
-        ],
-        showComments: false
-      }
-    ],
+    posts: [],
 
     // 是否显示发布框
     showPublishModal: false,
@@ -263,6 +142,14 @@ Page({
     
     // 云开发：获取帖子列表
     this.loadPostsFromCloud();
+  },
+  
+  // 页面显示时刷新用户信息
+  onShow() {
+    // 刷新用户授权状态和 openId
+    this.checkUserAuth();
+    // 刷新用户信息
+    this.loadUserInfo();
   },
   
   // ============ 云开发相关方法 ============
@@ -455,10 +342,33 @@ Page({
   },
 
   // 检查用户授权状态
-  checkUserAuth() {
+  async checkUserAuth() {
     const userInfo = wx.getStorageSync('userInfo');
     const isAuthorized = !!(userInfo && userInfo.nickname);
+    
+    // 尝试获取 openId
+    let openId = userInfo ? userInfo.openId || userInfo._id || '' : '';
+    
+    // 如果本地没有 openId，尝试从存储获取
+    if (!openId) {
+      openId = wx.getStorageSync('openId') || '';
+    }
+    
+    // 如果仍然没有 openId，调用云函数获取
+    if (!openId && wx.cloud) {
+      try {
+        const res = await cloud.callFunction('getOpenId', {});
+        if (res && res.openid) {
+          openId = res.openid;
+          wx.setStorageSync('openId', openId);
+        }
+      } catch (e) {
+        console.error('[Square] 获取OpenID失败:', e);
+      }
+    }
+    
     this.setData({
+      currentUserId: openId,
       'userInfo.isAuthorized': isAuthorized,
       'userInfo.avatar': userInfo ? userInfo.avatar : ''
     });
@@ -468,9 +378,36 @@ Page({
   loadUserInfo() {
     const userInfo = wx.getStorageSync('userInfo');
     if (userInfo) {
-      const surgeryDate = new Date(userInfo.surgeryDate);
-      const today = new Date();
-      const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
+      let daysDiff = 0;
+      
+      // 优先使用手术日期，否则使用受伤日期
+      const targetDate = userInfo.surgeryDate || userInfo.injuryDate;
+      if (targetDate) {
+        try {
+          // 使用与 profile.js 一致的日期解析方式：添加北京时间 00:00:00
+          const dateObj = new Date(targetDate + 'T00:00:00+08:00');
+          const today = new Date();
+          // 设置为当天 00:00:00，与 profile.js 一致
+          today.setHours(0, 0, 0, 0);
+          
+          // 检查日期是否有效
+          if (!isNaN(dateObj.getTime())) {
+            daysDiff = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
+            console.log('[Square] 术后/伤后天数计算:', {
+              targetDate,
+              dateObj: dateObj.toISOString(),
+              today: today.toISOString(),
+              daysDiff
+            });
+          } else {
+            console.log('[Square] 日期解析失败:', targetDate);
+          }
+        } catch (e) {
+          console.error('[Square] 日期计算异常:', e);
+        }
+      } else {
+        console.log('[Square] 未设置手术/受伤日期');
+      }
 
       // 同步运动爱好者的具体运动标签
       let userSportsTags = [];
@@ -487,7 +424,9 @@ Page({
           avatar: userInfo.avatar || '',
           nickname: userInfo.nickname || '康复勇士',
           sportsBackground: userInfo.sportsBackground || '',
-          sportsItems: userInfo.sportsItems || []
+          sportsItems: userInfo.sportsItems || [],
+          surgeryDate: userInfo.surgeryDate || userInfo.injuryDate || '',
+          injuryDate: userInfo.injuryDate || ''
         },
         userSportsTags
       });
@@ -890,6 +829,8 @@ Page({
       }, 1500);
       return;
     }
+    // 刷新用户信息（确保术后天数是最新的）
+    this.loadUserInfo();
     this.setData({ showPublishModal: true });
   },
 
@@ -950,12 +891,17 @@ Page({
     }
 
     // 构造自动标签
+    const daysValue = userInfo.daysSinceSurgery;
+    const validDays = typeof daysValue === 'number' && !isNaN(daysValue) ? daysValue : 0;
+    
     const autoTags = [
-      `#${userInfo.injuryType.replace('重建', '').replace('修复', '')}`,
-      `#术后${userInfo.daysSinceSurgery}天`
+      `#${userInfo.injuryType.replace('重建', '').replace('修复', '')}`
     ];
-    if (userInfo.daysSinceSurgery >= 90) {
-      autoTags.push('#90天以上');
+    if (validDays > 0) {
+      autoTags.push(`#术后${validDays}天`);
+      if (validDays >= 90) {
+        autoTags.push('#90天以上');
+      }
     }
     // 添加运动爱好者的具体运动标签
     if (userInfo.sportsBackground === '运动爱好者' && userSportsTags.length > 0) {
@@ -969,7 +915,7 @@ Page({
       images: publishImages,
       authorName: userInfo.nickname || '我',
       authorAvatar: userInfo.avatar || '',
-      daysSinceSurgery: userInfo.daysSinceSurgery,
+      daysSinceSurgery: validDays,
       injuryPart: userInfo.injuryPart,
       injuryType: userInfo.injuryType,
       injuryReason: userInfo.injuryCause || '',
@@ -982,6 +928,60 @@ Page({
     this.cloudCreatePost(postData).then(success => {
       if (success) {
         this.closePublishModal();
+      }
+    });
+  },
+
+  // 删除帖子
+  deletePost(e) {
+    const postId = e.currentTarget.dataset.id;
+    
+    console.log('[Square] 删除帖子, postId:', postId);
+    console.log('[Square] currentUserId:', this.data.currentUserId);
+    
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这条动态吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          wx.showLoading({ title: '删除中...' });
+          
+          try {
+            console.log('[Square] 开始调用 deletePost 云函数');
+            const result = await cloud.deletePost({ postId });
+            console.log('[Square] deletePost 返回结果:', result);
+            
+            if (result && result.success) {
+              // 从列表中移除该帖子
+              const posts = this.data.posts.filter(post => post.id !== postId);
+              const displayPosts = this.data.displayPosts.filter(post => post.id !== postId);
+              
+              this.setData({
+                posts,
+                displayPosts
+              });
+              
+              wx.showToast({
+                title: '删除成功',
+                icon: 'success'
+              });
+            } else {
+              console.log('[Square] 删除失败:', result?.error);
+              wx.showToast({
+                title: result?.error || '删除失败',
+                icon: 'none'
+              });
+            }
+          } catch (err) {
+            console.error('[Square] 删除帖子异常:', err);
+            wx.showToast({
+              title: '删除失败',
+              icon: 'none'
+            });
+          } finally {
+            wx.hideLoading();
+          }
+        }
       }
     });
   },

@@ -168,7 +168,11 @@ Page({
       const surgeryDate = new Date(targetDate + 'T00:00:00');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
+      
+      let daysDiff = 0;
+      if (!isNaN(surgeryDate.getTime())) {
+        daysDiff = Math.floor((today - surgeryDate) / (1000 * 60 * 60 * 24));
+      }
 
       this.setData({
         userInfo: {

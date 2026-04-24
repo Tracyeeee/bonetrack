@@ -24,7 +24,7 @@
           <view class="user-tags mt-10">
             <text class="user-tag text-caption">{{userInfo.injuryPart}}</text>
             <text class="user-tag text-caption">{{userInfo.injuryType}}</text>
-            <text class="user-tag text-caption text-orange">术后{{userInfo.daysSinceSurgery}}天</text>
+            <text class="user-tag text-caption text-orange" wx:if="{{userInfo.daysSinceSurgery > 0}}">术后{{userInfo.daysSinceSurgery}}天</text>
           </view>
         </view>
       </view>
@@ -37,28 +37,6 @@
       </view>
       
       <view class="progress-card card">
-        <!-- 角度进度 -->
-        <view class="angle-progress">
-          <view class="progress-header">
-            <text class="text-caption text-secondary">当前弯腿角度</text>
-            <text class="text-caption text-secondary">目标：{{progress.targetAngle}}°</text>
-          </view>
-          <view class="angle-display mt-20">
-            <text class="angle-value big-number text-orange">{{progress.latestAngle}}</text>
-            <text class="angle-unit text-h3 text-secondary">°</text>
-          </view>
-          <view class="progress-bar-wrapper mt-20">
-            <view class="progress-bar">
-              <view class="progress-fill" style="width: {{progress.latestAngle / progress.targetAngle * 100}}%;"></view>
-            </view>
-            <view class="progress-labels flex-between mt-10">
-              <text class="text-caption text-muted">0°</text>
-              <text class="text-caption text-orange">{{utils.round(progress.latestAngle / progress.targetAngle * 100, 0)}}%</text>
-              <text class="text-caption text-muted">{{progress.targetAngle}}°</text>
-            </view>
-          </view>
-        </view>
-
         <!-- 训练进度 -->
         <view class="task-progress mt-30">
           <view class="progress-header">
@@ -90,7 +68,6 @@
           bindtap="onMenuTap"
         >
           <view class="menu-left">
-            <text class="menu-icon">{{item.icon}}</text>
             <text class="menu-name text-body">{{item.name}}</text>
           </view>
           <view class="menu-right" wx:if="{{item.arrow}}">

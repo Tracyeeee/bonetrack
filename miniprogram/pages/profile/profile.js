@@ -813,11 +813,12 @@ Page({
     
     wx.setStorageSync('userInfo', userInfo);
 
-    // 计算康复天数
+    // 计算康复天数（使用与 selectDate 一致的日期解析方式）
     const targetDate = userInfo.surgeryDate || userInfo.injuryDate;
     if (targetDate) {
-      const dateObj = new Date(targetDate);
+      const dateObj = new Date(targetDate + 'T00:00:00+08:00');
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const daysDiff = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
       userInfo.daysSinceSurgery = daysDiff;
       wx.setStorageSync('userInfo', userInfo);
@@ -909,11 +910,12 @@ Page({
 
     wx.setStorageSync('userInfo', userInfo);
 
-    // 计算康复天数
+    // 计算康复天数（使用与 selectDate 一致的日期解析方式）
     const targetDate = userInfo.surgeryDate || userInfo.injuryDate;
     if (targetDate) {
-      const dateObj = new Date(targetDate);
+      const dateObj = new Date(targetDate + 'T00:00:00+08:00');
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const daysDiff = Math.floor((today - dateObj) / (1000 * 60 * 60 * 24));
       userInfo.daysSinceSurgery = daysDiff;
       wx.setStorageSync('userInfo', userInfo);

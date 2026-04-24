@@ -195,21 +195,6 @@
   align-items: center;
 }
 
-.angle-display {
-  display: flex;
-  align-items: baseline;
-}
-
-.angle-value {
-  font-size: 64rpx;
-  font-weight: 700;
-}
-
-.angle-unit {
-  font-size: 40rpx;
-  margin-left: 8rpx;
-}
-
 /* 进度条 */
 .progress-bar-wrapper {
   width: 100%;

@@ -100,13 +100,41 @@ exports.main = async (event, context) => {
     // 格式化返回数据（添加点赞状态）
     const formattedPosts = posts.map(post => {
       const postId = typeof post._id === 'string' ? post._id : String(post._id);
+      // 确保 daysSinceSurgery 是有效数字
+      const daysSinceSurgery = (typeof post.daysSinceSurgery === 'number' && !isNaN(post.daysSinceSurgery)) 
+        ? post.daysSinceSurgery 
+        : 0;
+      
+      // 清理标签：移除包含 null、undefined 或 术后0天 的标签
+      let tags = (post.tags || []).map(tag => {
+        if (tag === null || tag === undefined || tag === 'null' || tag === 'undefined') {
+          return null;
+        }
+        if (typeof tag === 'string') {
+          // 移除 "术后null天"、"术后undefined天"、"术后0天" 等无效标签
+          if (/^#?术后(null|undefined|0)天$/.test(tag)) {
+            return null;
+          }
+          // 移除包含 null 的标签
+          if (tag.includes('null') || tag.includes('undefined')) {
+            return null;
+          }
+        }
+        return tag;
+      }).filter(tag => tag && tag !== '');
+      
+      // 如果有有效术后天数，添加正确的术后标签
+      if (daysSinceSurgery > 0 && !tags.some(t => t.includes('术后') && t.includes('天'))) {
+        tags.push(`#术后${daysSinceSurgery}天`);
+      }
+      
       return {
         _id: post._id,
         id: postId,
         authorId: post.authorId,
         authorName: post.authorName,
         authorAvatar: post.authorAvatar,
-        daysSinceSurgery: post.daysSinceSurgery,
+        daysSinceSurgery: daysSinceSurgery,
         injuryPart: post.injuryPart,
         injuryType: post.injuryType,
         injuryReason: post.injuryReason,
@@ -114,7 +142,7 @@ exports.main = async (event, context) => {
         sportsItems: post.sportsItems || [],
         content: post.content,
         images: post.images || [],
-        tags: post.tags || [],
+        tags: tags,
         likes: post.likes || 0,
         comments: post.commentCount || 0,
         isLiked: userLikes.includes(postId),

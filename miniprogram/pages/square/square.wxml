@@ -160,24 +160,27 @@ module.exports = {
       <view class="post-card card" wx:for="{{displayPosts}}" wx:key="id">
         <!-- 用户信息 -->
         <view class="post-header">
-          <view class="user-info" data-userid="{{item.userId}}" bindtap="viewUserProfile">
+          <view class="user-info" data-userid="{{item.authorId}}" data-authorid="{{item.authorId}}" bindtap="viewUserProfile">
             <view class="user-avatar">
-              <image wx:if="{{item.userAvatar}}" src="{{item.userAvatar}}" mode="aspectFill"></image>
+              <image wx:if="{{item.authorAvatar}}" src="{{item.authorAvatar}}" mode="aspectFill"></image>
               <text wx:else class="avatar-placeholder-icon">👤</text>
             </view>
             <view class="user-details">
-              <text class="user-name text-body">{{item.userName}}</text>
+              <text class="user-name text-body">{{item.authorName}}</text>
               <view class="user-tags">
                 <text class="user-tag text-caption">{{item.injuryPart}}</text>
                 <text class="user-tag text-caption">{{item.injuryType}}</text>
                 <text class="user-tag text-caption text-blue">{{item.injuryReason}}</text>
                 <text class="user-tag text-caption text-purple">{{item.sportBackground}}</text>
                 <text class="user-tag text-caption text-green" wx:for="{{item.sportsItems}}" wx:for-item="sportItem" wx:key="index">{{sportItem}}</text>
-                <text class="user-tag text-caption text-orange">术后{{item.daysSinceSurgery}}天</text>
+                <text class="user-tag text-caption text-orange" wx:if="{{item.daysSinceSurgery > 0}}">术后{{item.daysSinceSurgery}}天</text>
               </view>
             </view>
           </view>
-          <text class="post-time text-caption text-muted">{{item.createTime}}</text>
+          <view class="post-header-right">
+            <text class="post-time text-caption text-muted">{{item.createTime}}</text>
+            <text class="post-delete text-muted" wx:if="{{item.authorId === currentUserId}}" data-id="{{item.id}}" catchtap="deletePost">删除</text>
+          </view>
         </view>
 
         <!-- 动态内容 -->
@@ -198,7 +201,7 @@ module.exports = {
         </view>
 
         <!-- 标签 -->
-        <view class="post-tags mt-20">
+        <view class="post-tags mt-20" wx:if="{{item.tags && item.tags.length > 0}}">
           <text class="post-tag text-caption text-orange" wx:for="{{item.tags}}" wx:key="index">{{item}}</text>
         </view>
 
@@ -257,7 +260,7 @@ module.exports = {
         <view class="user-tags-row">
           <text class="user-tag text-caption">{{userInfo.injuryPart}}</text>
           <text class="user-tag text-caption">{{userInfo.injuryType}}</text>
-          <text class="user-tag text-caption text-orange">术后{{userInfo.daysSinceSurgery}}天</text>
+          <text class="user-tag text-caption text-orange" wx:if="{{userInfo.daysSinceSurgery > 0}}">术后{{userInfo.daysSinceSurgery}}天</text>
         </view>
       </view>
 
@@ -273,7 +276,8 @@ module.exports = {
       <!-- 自动标签提示 -->
       <view class="auto-tags-hint">
         <text class="text-caption text-muted">自动添加标签：</text>
-        <text class="text-caption text-orange">#{{userInfo.injuryType}} #术后{{userInfo.daysSinceSurgery}}天</text>
+        <text class="text-caption text-orange" wx:if="{{userInfo.daysSinceSurgery > 0}}">#{{userInfo.injuryType}} #术后{{userInfo.daysSinceSurgery}}天</text>
+        <text class="text-caption text-orange" wx:else>#{{userInfo.injuryType}}</text>
       </view>
 
       <!-- 图片列表 -->

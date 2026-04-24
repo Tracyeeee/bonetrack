@@ -17,6 +17,7 @@ const CLOUD_FUNCTION_CONFIG = {
     login: 'login',           // 用户登录
     getPosts: 'getPosts',     // 获取帖子列表
     createPost: 'createPost', // 发布帖子
+    deletePost: 'deletePost', // 删除帖子
     comment: 'comment',       // 评论功能
     like: 'like'              // 点赞功能
   }
@@ -126,6 +127,15 @@ function createPost(postData) {
 }
 
 /**
+ * 删除帖子
+ * @param {string} postId 帖子ID
+ * @returns {Promise}
+ */
+function deletePost(params) {
+  return callFunction('deletePost', params);
+}
+
+/**
  * 评论操作
  * @param {object} params { action: 'add'|'list'|'delete', ... }
  * @returns {Promise}
@@ -208,6 +218,7 @@ module.exports = {
   login,
   getPosts,
   createPost,
+  deletePost,
   comment,
   like,
   uploadImage,

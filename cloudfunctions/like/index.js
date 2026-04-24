@@ -114,7 +114,8 @@ async function toggleLike(openId, event) {
     }
     
     // 获取更新后的点赞数
-    const { data: post } = await postsCollection.doc(postId).field({ likes: true }).get();
+    const postResult = await postsCollection.doc(postId).field({ likes: true }).get();
+    const post = postResult.data;
     const likes = post ? post.likes || 0 : 0;
     
     return {
